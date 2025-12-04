@@ -1,7 +1,7 @@
 import { successResponse, NotFoundError, AuthorizationError, ConflictError } from '@crevea/shared';
 import * as shopService from '../services/shop.service';
 import * as analyticsService from '../services/analytics.service';
-import { ShopStatus, VerificationStatus } from '@crevea/shared';
+import { ShopStatus } from '@crevea/shared';
 
 export const createShop = async (sellerId: string, data: any) => {
   // Check if seller already has a shop
@@ -77,7 +77,7 @@ export const submitVerification = async (id: string, userId: string, documents: 
   return successResponse(updated);
 };
 
-export const updateShopStatus = async (id: string, status: string, notes?: string) => {
+export const updateShopStatus = async (id: string, status: string, _notes?: string) => {
   const shop = await shopService.findById(id);
   if (!shop) {
     throw new NotFoundError('Shop', id);

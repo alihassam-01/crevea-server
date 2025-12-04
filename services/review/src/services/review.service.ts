@@ -76,7 +76,7 @@ export const findByTarget = async (
     order: { createdAt: 'DESC' },
     take: limit,
     skip,
-  });
+  }) as [Review[], number];
 
   return {
     reviews: reviews.map(mapReviewToInterface),
@@ -89,7 +89,7 @@ export const updateStatus = async (id: string, status: ReviewStatus): Promise<IR
 
   await reviewRepo.update(id, { status });
 
-  const review = await reviewRepo.findOne({ where: { id } });
+  const review = await reviewRepo.findOne({ where: { id } }) as Review | null;
   if (!review) throw new Error('Review not found');
 
   // Publish event
@@ -117,12 +117,12 @@ const mapReviewToInterface = (review: Review): IReview => {
     orderId: review.orderId,
     rating: review.rating,
     title: review.title,
-    comment: review.comment,
+    comment: review.comment || '',
     images: review.images,
     status: review.status,
     helpfulCount: review.helpfulCount,
     verifiedPurchase: review.verifiedPurchase,
-    sellerResponse: review.sellerResponse,
+    sellerResponse: review.sellerResponse as IReview['sellerResponse'],
     createdAt: review.createdAt,
     updatedAt: review.updatedAt,
   };

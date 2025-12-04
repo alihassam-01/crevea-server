@@ -28,7 +28,7 @@ export default async function notificationRoutes(server: FastifyInstance) {
   });
 
   // WebSocket for real-time notifications
-  server.get('/ws', { websocket: true }, async (connection, request) => {
+  server.get('/ws', { websocket: true }, async (connection, _request) => {
     // In production, authenticate WebSocket connection
     connection.socket.on('message', (message) => {
       // Handle incoming messages

@@ -30,13 +30,13 @@ export default async function promotionRoutes(server: FastifyInstance) {
   });
 
   // Get active promotions
-  server.get('/active', async (request, reply) => {
+  server.get('/active', async (_request, reply) => {
     const result = await promotionController.getActivePromotions();
     return reply.send(result);
   });
 
   // Get featured products
-  server.get('/featured', async (request, reply) => {
+  server.get('/featured', async (_request, reply) => {
     const result = await promotionController.getFeaturedProducts();
     return reply.send(result);
   });

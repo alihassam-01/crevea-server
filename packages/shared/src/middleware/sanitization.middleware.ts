@@ -7,7 +7,7 @@ import { sanitizeObject } from '../utils/sanitization';
  */
 export const sanitizeBody = async (
   request: FastifyRequest,
-  reply: FastifyReply
+  _reply: FastifyReply
 ): Promise<void> => {
   if (request.body && typeof request.body === 'object') {
     request.body = sanitizeObject(request.body as Record<string, any>);
@@ -19,7 +19,7 @@ export const sanitizeBody = async (
  */
 export const sanitizeQuery = async (
   request: FastifyRequest,
-  reply: FastifyReply
+  _reply: FastifyReply
 ): Promise<void> => {
   if (request.query && typeof request.query === 'object') {
     request.query = sanitizeObject(request.query as Record<string, any>);

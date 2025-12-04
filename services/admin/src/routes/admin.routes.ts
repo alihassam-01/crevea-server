@@ -6,15 +6,15 @@ import * as adminController from '../controllers/admin.controller';
 export default async function adminRoutes(server: FastifyInstance) {
   // Dashboard stats
   server.get('/dashboard', {
-    preHandler: [authenticate, requirePermission(Permission.ADMIN_ACCESS)]
-  }, async (request, reply) => {
+    preHandler: [authenticate, requirePermission(Permission.ADMIN_DASHBOARD)]
+  }, async (_request, reply) => {
     const result = await adminController.getDashboardStats();
     return reply.send(result);
   });
 
   // User management
   server.get('/users', {
-    preHandler: [authenticate, requirePermission(Permission.USER_MANAGE)]
+    preHandler: [authenticate, requirePermission(Permission.USER_READ)]
   }, async (request, reply) => {
     const { page = 1, limit = 20 } = request.query as any;
     const result = await adminController.getUsers({ page: parseInt(page), limit: parseInt(limit) });
@@ -23,8 +23,8 @@ export default async function adminRoutes(server: FastifyInstance) {
 
   // Shop moderation
   server.get('/shops/pending', {
-    preHandler: [authenticate, requirePermission(Permission.SHOP_MODERATE)]
-  }, async (request, reply) => {
+    preHandler: [authenticate, requirePermission(Permission.SHOP_APPROVE)]
+  }, async (_request, reply) => {
     const result = await adminController.getPendingShops();
     return reply.send(result);
   });
@@ -32,15 +32,15 @@ export default async function adminRoutes(server: FastifyInstance) {
   // Review moderation
   server.get('/reviews/pending', {
     preHandler: [authenticate, requirePermission(Permission.REVIEW_MODERATE)]
-  }, async (request, reply) => {
+  }, async (_request, reply) => {
     const result = await adminController.getPendingReviews();
     return reply.send(result);
   });
 
   // System health
   server.get('/health/system', {
-    preHandler: [authenticate, requirePermission(Permission.ADMIN_ACCESS)]
-  }, async (request, reply) => {
+    preHandler: [authenticate, requirePermission(Permission.ADMIN_DASHBOARD)]
+  }, async (_request, reply) => {
     const result = await adminController.getSystemHealth();
     return reply.send(result);
   });

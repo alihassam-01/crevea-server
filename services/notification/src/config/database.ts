@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { DataSource } from 'typeorm';
-import { createLogger } from '@crevea/shared';
+import { createLogger, NotificationType } from '@crevea/shared';
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, Index } from 'typeorm';
 
 const logger = createLogger('database');
@@ -15,8 +15,8 @@ export class Notification {
   @Index()
   userId!: string;
 
-  @Column({ length: 50 })
-  type!: string;
+  @Column({ type: 'varchar', length: 50 })
+  type!: NotificationType;
 
   @Column({ length: 255 })
   title!: string;

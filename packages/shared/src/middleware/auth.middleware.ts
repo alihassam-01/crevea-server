@@ -22,7 +22,7 @@ declare module 'fastify' {
  */
 export const authenticate = async (
   request: FastifyRequest,
-  reply: FastifyReply
+  _reply: FastifyReply
 ) => {
   try {
     const authHeader = request.headers.authorization;
@@ -53,7 +53,7 @@ export const authenticate = async (
  * Authorization Middleware Factory
  */
 export const authorize = (...roles: UserRole[]) => {
-  return async (request: FastifyRequest, reply: FastifyReply) => {
+  return async (request: FastifyRequest, _reply: FastifyReply) => {
     if (!request.user) {
       throw new AuthenticationError('User not authenticated');
     }
@@ -70,7 +70,7 @@ export const authorize = (...roles: UserRole[]) => {
  * Permission-based Authorization
  */
 export const requirePermission = (...permissions: Permission[]) => {
-  return async (request: FastifyRequest, reply: FastifyReply) => {
+  return async (request: FastifyRequest, _reply: FastifyReply) => {
     if (!request.user) {
       throw new AuthenticationError('User not authenticated');
     }
@@ -94,7 +94,7 @@ export const requirePermission = (...permissions: Permission[]) => {
  */
 export const optionalAuth = async (
   request: FastifyRequest,
-  reply: FastifyReply
+  _reply: FastifyReply
 ) => {
   try {
     const authHeader = request.headers.authorization;

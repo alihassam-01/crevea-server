@@ -1,5 +1,5 @@
 import { Kafka, Producer, Consumer } from 'kafkajs';
-import { createLogger, IEvent, EventType } from '@crevea/shared';
+import { createLogger, IEvent } from '@crevea/shared';
 
 const logger = createLogger('kafka');
 let kafka: Kafka;

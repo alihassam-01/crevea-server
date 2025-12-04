@@ -192,9 +192,17 @@ docker-compose restart kafka zookeeper
 
 ## 📚 Documentation
 
+### For Developers
 - [Implementation Plan](./brain/implementation_plan.md)
 - [Task Checklist](./brain/task.md)
 - [Walkthrough](./brain/walkthrough.md)
+- [Implementation Status](./STATUS.md)
+
+### For Frontend Developers
+- **[Frontend Documentation Hub](./FRONTEND_DOCS.md)** - Start here!
+- [Complete API Routes Reference](./API_ROUTES.md)
+- [Frontend Integration Guide](./FRONTEND_INTEGRATION_GUIDE.md)
+- [Postman Collection](./postman_collection.json)
 
 ## 🤝 Contributing
 
