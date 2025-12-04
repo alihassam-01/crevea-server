@@ -5,7 +5,7 @@ import * as inventoryService from '../services/inventory.service';
 export const createProduct = async (userId: string, data: any) => {
   // Verify user owns the shop
   const shopId = data.shopId || await getShopIdForUser(userId);
-  const product = await productService.create(shopId, data);
+  const product = await productService.create({ ...data, shopId });
   return successResponse(product);
 };
 
@@ -29,7 +29,7 @@ export const updateProduct = async (id: string, userId: string, data: any) => {
     throw new AuthorizationError('You can only update your own products');
   }
 
-  const updated = await productService.update(id, data);
+  const updated = await productService.updateProduct(id, data);
   return successResponse(updated);
 };
 
@@ -76,12 +76,16 @@ export const updateInventory = async (id: string, userId: string, data: any) => 
     throw new NotFoundError('Product', id);
   }
 
+  // Verify ownership
   const hasAccess = await verifyProductAccess(product.shopId, userId);
   if (!hasAccess) {
     throw new AuthorizationError();
   }
 
-  const inventory = await inventoryService.updateStock(id, data.stock, data.lowStockThreshold);
+  const inventory = await inventoryService.updateInventory(id, {
+    stock: data.stock,
+    lowStockThreshold: data.lowStockThreshold
+  });
   return successResponse(inventory);
 };
 
@@ -91,6 +95,7 @@ export const addVariation = async (id: string, userId: string, data: any) => {
     throw new NotFoundError('Product', id);
   }
 
+  // Verify ownership
   const hasAccess = await verifyProductAccess(product.shopId, userId);
   if (!hasAccess) {
     throw new AuthorizationError();
@@ -101,13 +106,13 @@ export const addVariation = async (id: string, userId: string, data: any) => {
 };
 
 // Helper functions
-const getShopIdForUser = async (userId: string): Promise<string> => {
+const getShopIdForUser = async (_userId: string): Promise<string> => {
   // This would query the shop service to get the user's shop
   // For now, returning a placeholder
   throw new Error('Shop ID must be provided');
 };
 
-const verifyProductAccess = async (shopId: string, userId: string): Promise<boolean> => {
+const verifyProductAccess = async (_shopId: string, _userId: string): Promise<boolean> => {
   // This would verify the user owns the shop
   // For now, returning true (implement proper check in production)
   return true;

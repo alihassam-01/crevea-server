@@ -12,7 +12,7 @@ export default async function paymentRoutes(server: FastifyInstance) {
   // Process payment
   server.post('/process', { preHandler: authenticate }, async (request, reply) => {
     const data = validate(processPaymentSchema, request.body);
-    const result = await paymentController.processPayment(data.paymentId, data.method, request.user!.userId);
+    const result = await paymentController.processPayment(data.paymentId, data.method as any, request.user!.userId);
     return reply.send(result);
   });
 

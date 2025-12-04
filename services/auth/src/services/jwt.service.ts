@@ -1,14 +1,24 @@
-import { generateToken, verifyToken } from '@crevea/shared';
+import { generateToken } from '@crevea/shared';
 import { IUser, IJWTPayload } from '@crevea/shared';
 import { AuthenticationError } from '@crevea/shared';
 import * as sessionService from './session.service';
+import { v4 as uuidv4 } from 'uuid';
+import { addDays } from '@crevea/shared';
 
 /**
  * Generate access and refresh tokens
  */
 export const generateTokens = async (user: IUser) => {
+  // Generate refresh token
+  const refreshToken = uuidv4();
+  const expiresAt = addDays(new Date(), 7); // 7 days
+
   // Create session
-  const session = await sessionService.createSession(user.id);
+  const session = await sessionService.createSession({
+    userId: user.id,
+    refreshToken,
+    expiresAt
+  });
 
   // Generate access token
   const payload: IJWTPayload = {
@@ -24,7 +34,7 @@ export const generateTokens = async (user: IUser) => {
     process.env.JWT_EXPIRES_IN || '15m'
   );
 
-  const refreshToken = session.refreshToken;
+
 
   return { accessToken, refreshToken };
 };

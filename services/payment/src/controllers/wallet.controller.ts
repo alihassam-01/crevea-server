@@ -9,7 +9,7 @@ export const getWallet = async (userId: string) => {
   });
 };
 
-export const getTransactions = async (userId: string, options: { page: number; limit: number }) => {
+export const getTransactions = async (_userId: string, options: { page: number; limit: number }) => {
   // Get wallet transactions
   return successResponse({
     data: [],

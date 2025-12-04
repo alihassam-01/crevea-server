@@ -12,12 +12,15 @@ export const createOrder = async (userId: string, data: any) => {
   }
 
   // Create order
-  const order = await orderService.create({
+  const order = await orderService.createOrder({
     customerId: userId,
-    items: cart.items,
+    items: cart.items as any,
     shippingAddress: data.shippingAddress,
-    billingAddress: data.billingAddress,
-    paymentMethod: data.paymentMethod,
+    subtotal: cart.subtotal,
+    tax: 0,
+    shippingCost: 0,
+    discount: 0,
+    total: cart.subtotal,
   });
 
   // Clear cart after order creation
@@ -46,7 +49,7 @@ export const getUserOrders = async (userId: string, options: { page: number; lim
   return paginatedResponse(orders, options.page, options.limit, total);
 };
 
-export const updateOrderStatus = async (id: string, status: string, userId: string) => {
+export const updateOrderStatus = async (id: string, status: string, _userId: string) => {
   const order = await orderService.findById(id);
   
   if (!order) {
@@ -71,7 +74,7 @@ export const updateOrderStatus = async (id: string, status: string, userId: stri
   return successResponse(updated);
 };
 
-export const cancelOrder = async (id: string, userId: string, reason: string) => {
+export const cancelOrder = async (id: string, userId: string, _reason: string) => {
   const order = await orderService.findById(id);
   
   if (!order) {

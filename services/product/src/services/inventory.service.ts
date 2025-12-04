@@ -1,11 +1,10 @@
-import { getInventoryRepository } from '../config/database';
-import { Inventory } from '../config/database';
+import { getInventoryRepository, Inventory } from '../config/database';
 import { publishEvent } from '../config/kafka';
 import { EventType, IEvent } from '@crevea/shared';
 import { v4 as uuidv4 } from 'uuid';
-import { LessThan } from 'typeorm';
 
-export const getInventory = async (productId: string): Promise<any> => {
+
+export const getInventory = async (productId: string): Promise<Inventory | null> => {
   const inventoryRepo = getInventoryRepository();
   const inventory = await inventoryRepo.findOne({ where: { productId } });
   return inventory || null;
@@ -14,7 +13,7 @@ export const getInventory = async (productId: string): Promise<any> => {
 export const updateInventory = async (
   productId: string,
   data: { stock?: number; reserved?: number; lowStockThreshold?: number }
-): Promise<any> => {
+): Promise<Inventory> => {
   const inventoryRepo = getInventoryRepository();
 
   let inventory = await inventoryRepo.findOne({ where: { productId } });

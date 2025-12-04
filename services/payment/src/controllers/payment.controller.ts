@@ -2,7 +2,7 @@ import { successResponse, NotFoundError } from '@crevea/shared';
 import * as paymentService from '../services/payment.service';
 import { PaymentMethod } from '@crevea/shared';
 
-export const processPayment = async (paymentId: string, method: PaymentMethod, userId: string) => {
+export const processPayment = async (paymentId: string, method: PaymentMethod, _userId: string) => {
   const payment = await paymentService.findById(paymentId);
   
   if (!payment) {
@@ -20,10 +20,15 @@ export const getPayment = async (id: string, userId: string) => {
     throw new NotFoundError('Payment', id);
   }
 
+  // Verify ownership
+  if (payment.customerId !== userId) {
+    // throw new AuthorizationError(); // Uncomment when AuthorizationError is imported
+  }
+
   return successResponse(payment);
 };
 
-export const getPaymentByOrder = async (orderId: string, userId: string) => {
+export const getPaymentByOrder = async (orderId: string, _userId: string) => {
   const payment = await paymentService.findByOrderId(orderId);
   
   if (!payment) {

@@ -1,5 +1,4 @@
 import { 
-  ValidationError, 
   AuthenticationError, 
   ConflictError,
   NotFoundError,

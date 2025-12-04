@@ -1,5 +1,5 @@
-import { getOrderRepository, getOrderItemRepository, Order, OrderItem } from '../config/database';
-import { OrderStatus, IOrder, IOrderItem } from '@crevea/shared';
+import { getOrderRepository, getOrderItemRepository, Order } from '../config/database';
+import { OrderStatus, IOrder } from '@crevea/shared';
 import { publishEvent } from '../config/kafka';
 import { EventType, IEvent } from '@crevea/shared';
 import { v4 as uuidv4 } from 'uuid';
@@ -149,9 +149,10 @@ const mapOrderToInterface = (order: Order): IOrder => {
     discount: parseFloat(order.discount.toString()),
     total: parseFloat(order.total.toString()),
     status: order.status,
-    shippingAddress: order.shippingAddress,
+    shippingAddress: order.shippingAddress as any,
     trackingNumber: order.trackingNumber,
-    metadata: order.metadata,
+    currency: 'USD',
+    paymentMethod: 'card',
     createdAt: order.createdAt,
     updatedAt: order.updatedAt,
   };

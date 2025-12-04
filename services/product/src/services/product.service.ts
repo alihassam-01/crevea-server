@@ -1,4 +1,4 @@
-import { getProductRepository, Product } from '../config/database';
+import { getProductRepository, getProductVariationRepository, Product } from '../config/database';
 import { ProductStatus, ProductType, IProduct } from '@crevea/shared';
 import { publishEvent } from '../config/kafka';
 import { EventType, IEvent } from '@crevea/shared';
@@ -131,6 +131,56 @@ export const search = async (
     products: products.map(mapProductToInterface),
     total,
   };
+};
+
+export const list = async (options: {
+  page: number;
+  limit: number;
+  category?: string;
+  status?: ProductStatus;
+  search?: string;
+  minPrice?: number;
+  maxPrice?: number;
+}): Promise<{ products: IProduct[]; total: number }> => {
+  const productRepo = getProductRepository();
+  const { page, limit, category, status, search, minPrice, maxPrice } = options;
+  const skip = (page - 1) * limit;
+
+  const qb = productRepo.createQueryBuilder('product');
+  
+  if (category) qb.andWhere('product.category = :category', { category });
+  if (status) qb.andWhere('product.status = :status', { status });
+  if (minPrice) qb.andWhere('product.price >= :minPrice', { minPrice });
+  if (maxPrice) qb.andWhere('product.price <= :maxPrice', { maxPrice });
+  if (search) {
+    qb.andWhere('(product.name ILIKE :search OR product.description ILIKE :search)', { search: `%${search}%` });
+  }
+
+  qb.orderBy('product.createdAt', 'DESC');
+  qb.skip(skip).take(limit);
+
+  const [products, total] = await qb.getManyAndCount();
+
+  return {
+    products: products.map(mapProductToInterface),
+    total,
+  };
+};
+
+export const addVariation = async (productId: string, data: any): Promise<any> => {
+  const variationRepo = getProductVariationRepository();
+  
+  const variation = variationRepo.create({
+    productId,
+    name: data.name,
+    sku: data.sku,
+    priceAdjustment: data.priceAdjustment || 0,
+    stock: data.stock || 0,
+    images: data.images || [],
+  });
+
+  await variationRepo.save(variation);
+  return variation;
 };
 
 export const updateProduct = async (id: string, data: Partial<Product>): Promise<IProduct> => {

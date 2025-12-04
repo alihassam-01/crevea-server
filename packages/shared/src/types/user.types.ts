@@ -65,9 +65,11 @@ export interface IOAuthAccount {
 export interface ISession {
   id: string;
   userId: string;
-  accessToken: string;
+  accessToken?: string;
   refreshToken: string;
   expiresAt: Date;
+  ipAddress?: string;
+  userAgent?: string;
   createdAt: Date;
 }
 

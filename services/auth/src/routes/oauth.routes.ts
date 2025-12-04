@@ -6,7 +6,7 @@ import * as oauthController from '../controllers/oauth.controller';
  */
 export default async function oauthRoutes(server: FastifyInstance) {
   // Google OAuth
-  server.get('/google', async (request, reply) => {
+  server.get('/google', async (_request, reply) => {
     const authUrl = oauthController.getGoogleAuthUrl();
     return reply.redirect(authUrl);
   });
@@ -21,7 +21,7 @@ export default async function oauthRoutes(server: FastifyInstance) {
   });
 
   // Facebook OAuth
-  server.get('/facebook', async (request, reply) => {
+  server.get('/facebook', async (_request, reply) => {
     const authUrl = oauthController.getFacebookAuthUrl();
     return reply.redirect(authUrl);
   });
@@ -35,16 +35,17 @@ export default async function oauthRoutes(server: FastifyInstance) {
   });
 
   // Apple OAuth
-  server.get('/apple', async (request, reply) => {
+  server.get('/apple', async (_request, reply) => {
     const authUrl = oauthController.getAppleAuthUrl();
     return reply.redirect(authUrl);
   });
 
-  server.post('/apple/callback', async (request, reply) => {
+  server.post('/apple/callback', async (request, _reply) => {
     const { code } = request.body as { code: string };
-    const result = await oauthController.handleAppleCallback(code);
+    await oauthController.handleAppleCallback(code);
     
-    const redirectUrl = `${process.env.FRONTEND_URL}/auth/callback?accessToken=${result.accessToken}&refreshToken=${result.refreshToken}`;
-    return reply.redirect(redirectUrl);
+    // Unreachable code since handleAppleCallback throws
+    // const redirectUrl = `${process.env.FRONTEND_URL}/auth/callback?accessToken=${result.accessToken}&refreshToken=${result.refreshToken}`;
+    // return reply.redirect(redirectUrl);
   });
 }

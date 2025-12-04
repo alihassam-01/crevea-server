@@ -1,4 +1,4 @@
-import { getPasswordResetTokenRepository, getEmailVerificationTokenRepository, PasswordResetToken, EmailVerificationToken } from '../config/database';
+import { getPasswordResetTokenRepository, getEmailVerificationTokenRepository } from '../config/database';
 import { createLogger } from '@crevea/shared';
 import { v4 as uuidv4 } from 'uuid';
 import { addHours } from '@crevea/shared';
@@ -7,7 +7,7 @@ const logger = createLogger('email-service');
 
 // Placeholder for actual email sending
 // In production, integrate with SendGrid, AWS SES, or similar
-const sendEmail = async (to: string, subject: string, html: string): Promise<void> => {
+const sendEmail = async (to: string, subject: string, _html: string): Promise<void> => {
   logger.info(`Sending email to ${to}: ${subject}`);
   // TODO: Implement actual email sending
 };

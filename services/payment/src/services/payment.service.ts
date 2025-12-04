@@ -42,7 +42,7 @@ export const processPayment = async (paymentId: string, method: PaymentMethod): 
   }
 
   let status = PaymentStatus.COMPLETED;
-  let gatewayTransactionId = null;
+  let gatewayTransactionId: string | undefined;
   let gatewayResponse: any = null;
 
   // Process based on method
@@ -91,6 +91,7 @@ export const processPayment = async (paymentId: string, method: PaymentMethod): 
         paymentId: updatedPayment.id,
         orderId: updatedPayment.orderId,
         amount: parseFloat(updatedPayment.amount.toString()),
+        method: updatedPayment.method,
       },
     };
     await publishEvent(event);
