@@ -5,7 +5,7 @@ export const getShopAnalytics = async (
   shopId: string,
   period: string
 ): Promise<IShopAnalytics> => {
-  const pool = getPool();
+  const manager = getPool();
 
   // This is a simplified version - in production, you'd query actual order data
   // For now, returning mock data structure
@@ -22,13 +22,13 @@ export const getShopAnalytics = async (
     revenueByDay: [],
   };
 
-  // Get total products
-  const productResult = await pool.query(
+  // Get total products using TypeORM's query method
+  const productResult = await manager.query(
     'SELECT COUNT(*) FROM products WHERE shop_id = $1',
     [shopId]
-  ).catch(() => ({ rows: [{ count: '0' }] }));
+  ).catch(() => [{ count: '0' }]);
   
-  analytics.totalProducts = parseInt(productResult.rows[0]?.count || '0');
+  analytics.totalProducts = parseInt(productResult[0]?.count || '0');
 
   // In a real implementation, you would:
   // 1. Query orders table for revenue and order count
@@ -39,3 +39,4 @@ export const getShopAnalytics = async (
 
   return analytics;
 };
+

@@ -5,12 +5,12 @@ import { ShopStatus, VerificationStatus } from '@crevea/shared';
 
 export const createShop = async (sellerId: string, data: any) => {
   // Check if seller already has a shop
-  const existingShop = await shopService.findBySellerId(sellerId);
-  if (existingShop) {
+  const existingShops = await shopService.findBySeller(sellerId);
+  if (existingShops && existingShops.length > 0) {
     throw new ConflictError('Seller already has a shop');
   }
 
-  const shop = await shopService.create(sellerId, data);
+  const shop = await shopService.create(data);
   return successResponse(shop);
 };
 
@@ -33,7 +33,7 @@ export const updateShop = async (id: string, userId: string, data: any) => {
     throw new AuthorizationError('You can only update your own shop');
   }
 
-  const updated = await shopService.update(id, data);
+  const updated = await shopService.updateShop(id, data);
   return successResponse(updated);
 };
 
@@ -52,7 +52,7 @@ export const deleteShop = async (id: string, userId: string) => {
 
 export const listShops = async (query: any) => {
   const { page = 1, limit = 20, category, status, search } = query;
-  const result = await shopService.list({
+  const result = await shopService.search(query.search || '', {
     page: parseInt(page),
     limit: parseInt(limit),
     category,
@@ -72,7 +72,8 @@ export const submitVerification = async (id: string, userId: string, documents: 
     throw new AuthorizationError('You can only verify your own shop');
   }
 
-  const updated = await shopService.submitVerification(id, documents);
+  // Placeholder - implement verification submission
+  const updated = await shopService.updateShop(id, { verificationDocuments: documents });
   return successResponse(updated);
 };
 
@@ -82,7 +83,7 @@ export const updateShopStatus = async (id: string, status: string, notes?: strin
     throw new NotFoundError('Shop', id);
   }
 
-  const updated = await shopService.updateStatus(id, status as ShopStatus, notes);
+  const updated = await shopService.updateShop(id, { status: status as ShopStatus });
   return successResponse(updated);
 };
 
@@ -97,6 +98,6 @@ export const getAnalytics = async (id: string, period: string) => {
 };
 
 export const getSellerShops = async (sellerId: string) => {
-  const shop = await shopService.findBySellerId(sellerId);
-  return successResponse(shop ? [shop] : []);
+  const shops = await shopService.findBySeller(sellerId);
+  return successResponse(shops);
 };

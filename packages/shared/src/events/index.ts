@@ -20,6 +20,7 @@ export enum EventType {
   PRODUCT_CREATED = 'product.created',
   PRODUCT_UPDATED = 'product.updated',
   PRODUCT_DELETED = 'product.deleted',
+  PRODUCT_LOW_STOCK = 'product.low_stock',
   PRODUCT_OUT_OF_STOCK = 'product.out_of_stock',
   PRODUCT_RESTOCKED = 'product.restocked',
   

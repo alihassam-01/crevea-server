@@ -1,136 +1,107 @@
-import { getPool } from '../config/database';
-import { generateRandomString } from '@crevea/shared';
-import { addHours } from '@crevea/shared';
-import { AuthenticationError } from '@crevea/shared';
-import { EventType, IEvent, INotificationPayload } from '@crevea/shared';
-import { publishEvent } from '../config/kafka';
+import { getPasswordResetTokenRepository, getEmailVerificationTokenRepository, PasswordResetToken, EmailVerificationToken } from '../config/database';
+import { createLogger } from '@crevea/shared';
 import { v4 as uuidv4 } from 'uuid';
-import { NotificationType, NotificationChannel } from '@crevea/shared';
+import { addHours } from '@crevea/shared';
 
-/**
- * Send verification email
- */
+const logger = createLogger('email-service');
+
+// Placeholder for actual email sending
+// In production, integrate with SendGrid, AWS SES, or similar
+const sendEmail = async (to: string, subject: string, html: string): Promise<void> => {
+  logger.info(`Sending email to ${to}: ${subject}`);
+  // TODO: Implement actual email sending
+};
+
 export const sendVerificationEmail = async (userId: string, email: string): Promise<void> => {
-  const pool = getPool();
-  
+  const tokenRepo = getEmailVerificationTokenRepository();
+
   // Generate token
-  const token = generateRandomString(32);
+  const token = uuidv4();
   const expiresAt = addHours(new Date(), 24); // 24 hours
 
   // Save token
-  await pool.query(
-    'INSERT INTO email_verification_tokens (user_id, token, expires_at) VALUES ($1, $2, $3)',
-    [userId, token, expiresAt]
+  const verificationToken = tokenRepo.create({
+    userId,
+    token,
+    expiresAt,
+    used: false,
+  });
+
+  await tokenRepo.save(verificationToken);
+
+  // Send email
+  const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${token}`;
+  await sendEmail(
+    email,
+    'Verify your email',
+    `<p>Click <a href="${verificationUrl}">here</a> to verify your email.</p>`
   );
-
-  // Publish email event
-  const event: IEvent<INotificationPayload> = {
-    id: uuidv4(),
-    type: EventType.EMAIL_SEND,
-    timestamp: new Date(),
-    payload: {
-      userId,
-      type: 'EMAIL_VERIFICATION',
-      title: 'Verify your email',
-      message: `Click the link to verify your email: ${process.env.FRONTEND_URL}/verify-email?token=${token}`,
-      channels: [NotificationChannel.EMAIL],
-      data: { token, email },
-    },
-  };
-
-  await publishEvent(event);
 };
 
-/**
- * Verify email token
- */
-export const verifyEmailToken = async (token: string): Promise<string> => {
-  const pool = getPool();
-  
-  const result = await pool.query(
-    'SELECT * FROM email_verification_tokens WHERE token = $1 AND used = false',
-    [token]
-  );
-
-  const tokenData = result.rows[0];
-  
-  if (!tokenData) {
-    throw new AuthenticationError('Invalid verification token');
-  }
-
-  if (new Date(tokenData.expires_at) < new Date()) {
-    throw new AuthenticationError('Verification token expired');
-  }
-
-  // Mark token as used
-  await pool.query(
-    'UPDATE email_verification_tokens SET used = true WHERE id = $1',
-    [tokenData.id]
-  );
-
-  return tokenData.user_id;
-};
-
-/**
- * Send password reset email
- */
 export const sendPasswordResetEmail = async (userId: string, email: string): Promise<void> => {
-  const pool = getPool();
-  
+  const tokenRepo = getPasswordResetTokenRepository();
+
   // Generate token
-  const token = generateRandomString(32);
+  const token = uuidv4();
   const expiresAt = addHours(new Date(), 1); // 1 hour
 
   // Save token
-  await pool.query(
-    'INSERT INTO password_reset_tokens (user_id, token, expires_at) VALUES ($1, $2, $3)',
-    [userId, token, expiresAt]
+  const resetToken = tokenRepo.create({
+    userId,
+    token,
+    expiresAt,
+    used: false,
+  });
+
+  await tokenRepo.save(resetToken);
+
+  // Send email
+  const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
+  await sendEmail(
+    email,
+    'Reset your password',
+    `<p>Click <a href="${resetUrl}">here</a> to reset your password.</p>`
   );
-
-  // Publish email event
-  const event: IEvent<INotificationPayload> = {
-    id: uuidv4(),
-    type: EventType.EMAIL_SEND,
-    timestamp: new Date(),
-    payload: {
-      userId,
-      type: 'PASSWORD_RESET',
-      title: 'Reset your password',
-      message: `Click the link to reset your password: ${process.env.FRONTEND_URL}/reset-password?token=${token}`,
-      channels: [NotificationChannel.EMAIL],
-      data: { token, email },
-    },
-  };
-
-  await publishEvent(event);
 };
 
-/**
- * Verify password reset token
- */
+export const verifyEmailToken = async (token: string): Promise<string> => {
+  const tokenRepo = getEmailVerificationTokenRepository();
+
+  const verificationToken = await tokenRepo.findOne({
+    where: { token, used: false },
+  });
+
+  if (!verificationToken) {
+    throw new Error('Invalid or expired token');
+  }
+
+  if (verificationToken.expiresAt < new Date()) {
+    throw new Error('Token has expired');
+  }
+
+  // Mark as used
+  await tokenRepo.update(verificationToken.id, { used: true });
+
+  return verificationToken.userId;
+};
+
 export const verifyPasswordResetToken = async (token: string): Promise<string> => {
-  const pool = getPool();
-  
-  const result = await pool.query(
-    'SELECT * FROM password_reset_tokens WHERE token = $1 AND used = false',
-    [token]
-  );
+  const tokenRepo = getPasswordResetTokenRepository();
 
-  const tokenData = result.rows[0];
-  
-  if (!tokenData) {
-    throw new AuthenticationError('Invalid reset token');
+  const resetToken = await tokenRepo.findOne({
+    where: { token, used: false },
+  });
+
+  if (!resetToken) {
+    throw new Error('Invalid or expired token');
   }
 
-  if (new Date(tokenData.expires_at) < new Date()) {
-    throw new AuthenticationError('Reset token expired');
+  if (resetToken.expiresAt < new Date()) {
+    throw new Error('Token has expired');
   }
 
-  // Mark token as used
-  await pool.query(
-    'UPDATE password_reset_tokens SET used = true WHERE id = $1',
-    [tokenData.id]
-  );
+  // Mark as used
+  await tokenRepo.update(resetToken.id, { used: true });
 
-  return tokenData.user_id;
+  return resetToken.userId;
 };

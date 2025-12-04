@@ -1,4 +1,4 @@
-import { successResponse, ExternalServiceError } from '@crevea/shared';
+import { ExternalServiceError } from '@crevea/shared';
 import * as userService from '../services/user.service';
 import * as jwtService from '../services/jwt.service';
 import { UserRole, OAuthProvider } from '@crevea/shared';
@@ -9,6 +9,39 @@ interface OAuthUserData {
   firstName: string;
   lastName: string;
   avatar?: string;
+}
+
+interface GoogleTokenResponse {
+  access_token: string;
+  refresh_token?: string;
+  expires_in: number;
+  token_type: string;
+}
+
+interface GoogleUserInfo {
+  id: string;
+  email: string;
+  given_name: string;
+  family_name: string;
+  picture?: string;
+}
+
+interface FacebookTokenResponse {
+  access_token: string;
+  token_type: string;
+  expires_in?: number;
+}
+
+interface FacebookUserInfo {
+  id: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  picture?: {
+    data?: {
+      url?: string;
+    };
+  };
 }
 
 /**
@@ -48,7 +81,7 @@ export const handleGoogleCallback = async (code: string) => {
     throw new ExternalServiceError('Google', 'Failed to exchange code for tokens');
   }
 
-  const tokens = await tokenResponse.json();
+  const tokens = await tokenResponse.json() as GoogleTokenResponse;
 
   // Get user info
   const userResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
@@ -59,7 +92,7 @@ export const handleGoogleCallback = async (code: string) => {
     throw new ExternalServiceError('Google', 'Failed to fetch user info');
   }
 
-  const googleUser = await userResponse.json();
+  const googleUser = await userResponse.json() as GoogleUserInfo;
 
   const userData: OAuthUserData = {
     providerId: googleUser.id,
@@ -105,7 +138,7 @@ export const handleFacebookCallback = async (code: string) => {
     throw new ExternalServiceError('Facebook', 'Failed to exchange code for tokens');
   }
 
-  const tokens = await tokenResponse.json();
+  const tokens = await tokenResponse.json() as FacebookTokenResponse;
 
   // Get user info
   const userResponse = await fetch(
@@ -116,7 +149,7 @@ export const handleFacebookCallback = async (code: string) => {
     throw new ExternalServiceError('Facebook', 'Failed to fetch user info');
   }
 
-  const fbUser = await userResponse.json();
+  const fbUser = await userResponse.json() as FacebookUserInfo;
 
   const userData: OAuthUserData = {
     providerId: fbUser.id,
@@ -147,7 +180,7 @@ export const getAppleAuthUrl = (): string => {
 /**
  * Handle Apple OAuth callback
  */
-export const handleAppleCallback = async (code: string) => {
+export const handleAppleCallback = async (_code: string) => {
   // Apple OAuth implementation is more complex and requires JWT
   // This is a simplified version
   throw new ExternalServiceError('Apple', 'Apple OAuth not fully implemented yet');

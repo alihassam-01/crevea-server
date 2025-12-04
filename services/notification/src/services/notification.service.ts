@@ -1,27 +1,31 @@
-import { getPool } from '../config/database';
-import { INotification } from '@crevea/shared';
+import { getNotificationRepository } from '../config/database';
+import { Notification } from '../config/database';
+import { INotification, NotificationType } from '@crevea/shared';
 import { publishEvent } from '../config/kafka';
 import { EventType, IEvent } from '@crevea/shared';
 import { v4 as uuidv4 } from 'uuid';
 
 interface CreateNotificationData {
   userId: string;
-  type: string;
+  type: NotificationType;
   title: string;
   message: string;
   data?: any;
 }
 
 export const create = async (data: CreateNotificationData): Promise<INotification> => {
-  const pool = getPool();
+  const notificationRepo = getNotificationRepository();
 
-  const result = await pool.query(
-    `INSERT INTO notifications (user_id, type, title, message, data)
-     VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-    [data.userId, data.type, data.title, data.message, JSON.stringify(data.data || {})]
-  );
+  const notification = notificationRepo.create({
+    userId: data.userId,
+    type: data.type,
+    title: data.title,
+    message: data.message,
+    data: data.data,
+    read: false,
+  });
 
-  const notification = mapNotification(result.rows[0]);
+  await notificationRepo.save(notification);
 
   // Publish email event if needed
   const event: IEvent = {
@@ -39,67 +43,55 @@ export const create = async (data: CreateNotificationData): Promise<INotificatio
   };
   await publishEvent(event);
 
-  return notification;
+  return mapNotificationToInterface(notification);
 };
 
-export const findByUserId = async (userId: string, options: { page: number; limit: number; unreadOnly?: boolean }) => {
-  const pool = getPool();
+export const findByUserId = async (
+  userId: string,
+  options: { page: number; limit: number; unreadOnly?: boolean }
+): Promise<{ notifications: INotification[]; total: number }> => {
+  const notificationRepo = getNotificationRepository();
   const { page, limit, unreadOnly } = options;
-  const offset = (page - 1) * limit;
+  const skip = (page - 1) * limit;
 
-  let query = 'SELECT * FROM notifications WHERE user_id = $1';
-  const values: any[] = [userId];
-  let paramIndex = 2;
-
+  const where: any = { userId };
   if (unreadOnly) {
-    query += ` AND read = false`;
+    where.read = false;
   }
 
-  query += ` ORDER BY created_at DESC LIMIT $${paramIndex++} OFFSET $${paramIndex++}`;
-  values.push(limit, offset);
-
-  const result = await pool.query(query, values);
-
-  let countQuery = 'SELECT COUNT(*) FROM notifications WHERE user_id = $1';
-  const countValues = [userId];
-  if (unreadOnly) {
-    countQuery += ' AND read = false';
-  }
-
-  const countResult = await pool.query(countQuery, countValues);
-  const total = parseInt(countResult.rows[0].count);
+  const [notifications, total] = await notificationRepo.findAndCount({
+    where,
+    order: { createdAt: 'DESC' },
+    take: limit,
+    skip,
+  });
 
   return {
-    notifications: result.rows.map(mapNotification),
+    notifications: notifications.map(mapNotificationToInterface),
     total,
   };
 };
 
 export const markAsRead = async (id: string, userId: string): Promise<void> => {
-  const pool = getPool();
-  await pool.query(
-    'UPDATE notifications SET read = true WHERE id = $1 AND user_id = $2',
-    [id, userId]
-  );
+  const notificationRepo = getNotificationRepository();
+  await notificationRepo.update({ id, userId }, { read: true });
 };
 
 export const markAllAsRead = async (userId: string): Promise<void> => {
-  const pool = getPool();
-  await pool.query(
-    'UPDATE notifications SET read = true WHERE user_id = $1 AND read = false',
-    [userId]
-  );
+  const notificationRepo = getNotificationRepository();
+  await notificationRepo.update({ userId, read: false }, { read: true });
 };
 
-const mapNotification = (row: any): INotification => {
+const mapNotificationToInterface = (notification: Notification): INotification => {
   return {
-    id: row.id,
-    userId: row.user_id,
-    type: row.type,
-    title: row.title,
-    message: row.message,
-    data: row.data,
-    read: row.read,
-    createdAt: row.created_at,
+    id: notification.id,
+    userId: notification.userId,
+    type: notification.type as NotificationType,
+    title: notification.title,
+    message: notification.message,
+    data: notification.data,
+    channels: ['IN_APP' as any], // Default to in-app notifications
+    isRead: notification.read,
+    createdAt: notification.createdAt,
   };
 };

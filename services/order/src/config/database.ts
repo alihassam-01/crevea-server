@@ -6,7 +6,6 @@ import { OrderStatus } from '@crevea/shared';
 
 const logger = createLogger('database');
 
-// Order entities
 @Entity('orders')
 export class Order {
   @PrimaryGeneratedColumn('uuid')
@@ -98,12 +97,41 @@ export class OrderItem {
   createdAt!: Date;
 }
 
+@Entity('return_requests')
+export class ReturnRequest {
+  @PrimaryGeneratedColumn('uuid')
+  id!: string;
+
+  @Column()
+  @Index()
+  orderId!: string;
+
+  @Column()
+  @Index()
+  customerId!: string;
+
+  @Column({ type: 'text' })
+  reason!: string;
+
+  @Column({ type: 'varchar', default: 'PENDING' })
+  status!: string;
+
+  @Column({ type: 'text', array: true, default: '{}' })
+  images!: string[];
+
+  @CreateDateColumn()
+  createdAt!: Date;
+
+  @UpdateDateColumn()
+  updatedAt!: Date;
+}
+
 export const AppDataSource = new DataSource({
   type: 'postgres',
   url: process.env.DATABASE_URL,
   synchronize: process.env.NODE_ENV === 'development',
   logging: process.env.NODE_ENV === 'development',
-  entities: [Order, OrderItem],
+  entities: [Order, OrderItem, ReturnRequest],
   subscribers: [],
   migrations: [],
   maxQueryExecutionTime: 1000,
@@ -128,3 +156,4 @@ export const closeDatabase = async (): Promise<void> => {
 
 export const getOrderRepository = () => AppDataSource.getRepository(Order);
 export const getOrderItemRepository = () => AppDataSource.getRepository(OrderItem);
+export const getReturnRequestRepository = () => AppDataSource.getRepository(ReturnRequest);

@@ -10,7 +10,8 @@ export const requestLogger = async (
 ) => {
   const start = Date.now();
 
-  reply.addHook('onSend', async () => {
+  // Listen for when the response is finished being sent
+  reply.raw.on('finish', () => {
     const duration = Date.now() - start;
     
     logger.info({

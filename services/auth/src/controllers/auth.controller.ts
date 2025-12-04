@@ -19,7 +19,7 @@ interface RegisterData {
   password: string;
   firstName: string;
   lastName: string;
-  role: 'CUSTOMER' | 'SELLER';
+  role?: 'CUSTOMER' | 'SELLER';
 }
 
 interface LoginData {
@@ -46,7 +46,7 @@ export const register = async (data: RegisterData) => {
     passwordHash,
     firstName: data.firstName,
     lastName: data.lastName,
-    role: data.role as UserRole,
+    role: (data.role || 'CUSTOMER') as UserRole,
   });
 
   // Send verification email

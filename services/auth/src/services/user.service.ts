@@ -1,17 +1,19 @@
-import { getUserRepository, getOAuthAccountRepository } from '../config/database';
-import { User, OAuthAccount } from '@crevea/shared';
+import { getUserRepository, getOAuthAccountRepository, User } from '../config/database';
 import { UserRole, UserStatus, OAuthProvider, IUser } from '@crevea/shared';
-import { hashPassword, comparePassword } from '@crevea/shared';
+import { comparePassword } from '@crevea/shared';
 import { sanitizeEmail } from '@crevea/shared';
-import { MoreThan } from 'typeorm';
 
-export const createUser = async (data: {
+interface CreateUserData {
   email: string;
-  password: string;
+  passwordHash?: string;
   firstName: string;
   lastName: string;
-  role?: UserRole;
-}): Promise<IUser> => {
+  role: UserRole;
+  emailVerified?: boolean;
+  avatar?: string;
+}
+
+export const create = async (data: CreateUserData): Promise<IUser> => {
   const userRepo = getUserRepository();
 
   // Sanitize email
@@ -23,19 +25,17 @@ export const createUser = async (data: {
     throw new Error('User already exists');
   }
 
-  // Hash password
-  const passwordHash = await hashPassword(data.password);
-
   // Create user
   const user = userRepo.create({
     email,
-    passwordHash,
+    passwordHash: data.passwordHash || '',
     firstName: data.firstName,
     lastName: data.lastName,
-    role: data.role || UserRole.CUSTOMER,
+    role: data.role,
     status: UserStatus.ACTIVE,
-    emailVerified: false,
+    emailVerified: data.emailVerified || false,
     mfaEnabled: false,
+    avatar: data.avatar,
   });
 
   await userRepo.save(user);
@@ -85,25 +85,30 @@ export const setEmailVerified = async (userId: string): Promise<void> => {
   await userRepo.update(userId, { emailVerified: true });
 };
 
-export const updatePassword = async (userId: string, newPassword: string): Promise<void> => {
+export const markEmailVerified = async (userId: string): Promise<void> => {
+  await setEmailVerified(userId);
+};
+
+export const updatePassword = async (userId: string, passwordHash: string): Promise<void> => {
   const userRepo = getUserRepository();
-  const passwordHash = await hashPassword(newPassword);
   await userRepo.update(userId, { passwordHash });
 };
 
-export const enableMFA = async (userId: string, secret: string): Promise<void> => {
+export const enableMFA = async (userId: string): Promise<void> => {
   const userRepo = getUserRepository();
-  await userRepo.update(userId, {
-    mfaEnabled: true,
-    mfaSecret: secret,
-  });
+  await userRepo.update(userId, { mfaEnabled: true });
+};
+
+export const saveMFASecret = async (userId: string, secret: string): Promise<void> => {
+  const userRepo = getUserRepository();
+  await userRepo.update(userId, { mfaSecret: secret });
 };
 
 export const disableMFA = async (userId: string): Promise<void> => {
   const userRepo = getUserRepository();
   await userRepo.update(userId, {
     mfaEnabled: false,
-    mfaSecret: null,
+    mfaSecret: undefined,
   });
 };
 
@@ -113,6 +118,34 @@ export const updateLastLogin = async (userId: string): Promise<void> => {
 };
 
 // OAuth methods
+export const findOAuthAccount = async (
+  provider: OAuthProvider,
+  providerId: string
+): Promise<{ userId: string } | null> => {
+  const oauthRepo = getOAuthAccountRepository();
+  const oauthAccount = await oauthRepo.findOne({
+    where: { provider, providerId },
+  });
+  return oauthAccount ? { userId: oauthAccount.userId } : null;
+};
+
+export const createOAuthAccount = async (data: {
+  userId: string;
+  provider: OAuthProvider;
+  providerId: string;
+  email: string;
+}): Promise<void> => {
+  const oauthRepo = getOAuthAccountRepository();
+  const oauthAccount = oauthRepo.create({
+    userId: data.userId,
+    provider: data.provider,
+    providerId: data.providerId,
+    email: data.email,
+    profile: {},
+  });
+  await oauthRepo.save(oauthAccount);
+};
+
 export const findOrCreateOAuthUser = async (
   provider: OAuthProvider,
   providerId: string,
@@ -165,6 +198,12 @@ export const findOrCreateOAuthUser = async (
   return mapUserToInterface(user);
 };
 
+// Helper to sanitize user data for client
+export const sanitizeUser = (user: IUser): Omit<IUser, 'mfaSecret'> => {
+  const { mfaSecret, ...sanitized } = user as any;
+  return sanitized;
+};
+
 // Helper to map entity to interface
 const mapUserToInterface = (user: User): IUser => {
   return {
@@ -177,10 +216,11 @@ const mapUserToInterface = (user: User): IUser => {
     role: user.role,
     status: user.status,
     emailVerified: user.emailVerified,
+    phoneVerified: false, // Not implemented yet
     mfaEnabled: user.mfaEnabled,
-    preferences: user.preferences,
+    mfaSecret: user.mfaSecret,
+    passwordHash: user.passwordHash,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
-    lastLoginAt: user.lastLoginAt,
   };
 };

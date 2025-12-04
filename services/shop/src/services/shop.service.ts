@@ -1,5 +1,4 @@
-import { getShopRepository } from '../config/database';
-import { Shop } from '@crevea/shared';
+import { getShopRepository, Shop } from '../config/database';
 import { ShopCategory, ShopStatus, VerificationStatus, IShop } from '@crevea/shared';
 import { publishEvent } from '../config/kafka';
 import { EventType, IEvent } from '@crevea/shared';
@@ -93,14 +92,14 @@ export const findBySeller = async (sellerId: string): Promise<IShop[]> => {
 
 export const search = async (
   query: string,
-  options: { page: number; limit: number; category?: ShopCategory }
+  options: { page: number; limit: number; category?: ShopCategory; status?: ShopStatus; search?: string }
 ): Promise<{ shops: IShop[]; total: number }> => {
   const shopRepo = getShopRepository();
-  const { page, limit, category } = options;
+  const { page, limit, category, status } = options;
   const skip = (page - 1) * limit;
 
   const where: any = {
-    status: ShopStatus.ACTIVE,
+    status: status || ShopStatus.ACTIVE,
     verificationStatus: VerificationStatus.APPROVED,
   };
 
@@ -197,21 +196,22 @@ const mapShopToInterface = (shop: Shop): IShop => {
     slug: shop.slug,
     sellerId: shop.sellerId,
     name: shop.name,
-    description: shop.description,
+    description: shop.description || '',
     logo: shop.logo,
     banner: shop.banner,
     category: shop.category,
     status: shop.status,
     verificationStatus: shop.verificationStatus,
-    address: shop.address,
-    phone: shop.phone,
-    email: shop.email,
-    socialLinks: shop.socialLinks,
+    isOpen: shop.status === ShopStatus.ACTIVE,
+    address: shop.address as any,
+    contactPhone: shop.phone,
+    contactEmail: shop.email,
+    socialLinks: shop.socialLinks as any,
     commissionRate: parseFloat(shop.commissionRate.toString()),
     rating: parseFloat(shop.rating.toString()),
     totalReviews: shop.totalReviews,
     totalSales: shop.totalSales,
-    verificationDocuments: shop.verificationDocuments,
+    verificationDocuments: shop.verificationDocuments as string[] | undefined,
     createdAt: shop.createdAt,
     updatedAt: shop.updatedAt,
   };

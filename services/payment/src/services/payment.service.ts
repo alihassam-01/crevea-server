@@ -1,4 +1,4 @@
-import { getPool } from '../config/database';
+import { getPaymentRepository, Payment } from '../config/database';
 import { publishEvent } from '../config/kafka';
 import { IPayment, PaymentMethod, PaymentStatus } from '@crevea/shared';
 import { EventType, IEvent, IPaymentCompletedPayload } from '@crevea/shared';
@@ -14,23 +14,28 @@ interface CreatePaymentData {
 }
 
 export const create = async (data: CreatePaymentData): Promise<IPayment> => {
-  const pool = getPool();
+  const paymentRepo = getPaymentRepository();
 
-  const result = await pool.query(
-    `INSERT INTO payments (order_id, customer_id, amount, method, status, metadata)
-     VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-    [data.orderId, data.customerId, data.amount, data.method, PaymentStatus.PENDING, JSON.stringify(data.metadata || {})]
-  );
+  const payment = paymentRepo.create({
+    orderId: data.orderId,
+    customerId: data.customerId,
+    amount: data.amount,
+    currency: 'ZAR',
+    method: data.method,
+    status: PaymentStatus.PENDING,
+    metadata: data.metadata || {},
+  });
 
-  return mapPayment(result.rows[0]);
+  await paymentRepo.save(payment);
+
+  return mapPaymentToInterface(payment);
 };
 
 export const processPayment = async (paymentId: string, method: PaymentMethod): Promise<IPayment> => {
-  const pool = getPool();
+  const paymentRepo = getPaymentRepository();
 
   // Get payment
-  const paymentResult = await pool.query('SELECT * FROM payments WHERE id = $1', [paymentId]);
-  const payment = paymentResult.rows[0];
+  const payment = await paymentRepo.findOne({ where: { id: paymentId } });
 
   if (!payment) {
     throw new Error('Payment not found');
@@ -38,7 +43,7 @@ export const processPayment = async (paymentId: string, method: PaymentMethod): 
 
   let status = PaymentStatus.COMPLETED;
   let gatewayTransactionId = null;
-  let gatewayResponse = null;
+  let gatewayResponse: any = null;
 
   // Process based on method
   switch (method) {
@@ -57,7 +62,6 @@ export const processPayment = async (paymentId: string, method: PaymentMethod): 
 
     case PaymentMethod.WALLET:
       // Deduct from wallet
-      // This would call wallet service
       status = PaymentStatus.COMPLETED;
       break;
 
@@ -68,17 +72,14 @@ export const processPayment = async (paymentId: string, method: PaymentMethod): 
   }
 
   // Update payment
-  const updateResult = await pool.query(
-    `UPDATE payments SET 
-      status = $1,
-      gateway_transaction_id = $2,
-      gateway_response = $3,
-      updated_at = CURRENT_TIMESTAMP
-    WHERE id = $4 RETURNING *`,
-    [status, gatewayTransactionId, JSON.stringify(gatewayResponse), paymentId]
-  );
+  await paymentRepo.update(paymentId, {
+    status,
+    gatewayTransactionId,
+    gatewayResponse,
+  });
 
-  const updatedPayment = mapPayment(updateResult.rows[0]);
+  const updatedPayment = await paymentRepo.findOne({ where: { id: paymentId } });
+  if (!updatedPayment) throw new Error('Payment not found after update');
 
   // Publish event if completed
   if (status === PaymentStatus.COMPLETED) {
@@ -89,7 +90,7 @@ export const processPayment = async (paymentId: string, method: PaymentMethod): 
       payload: {
         paymentId: updatedPayment.id,
         orderId: updatedPayment.orderId,
-        amount: updatedPayment.amount,
+        amount: parseFloat(updatedPayment.amount.toString()),
       },
     };
     await publishEvent(event);
@@ -103,31 +104,23 @@ export const processPayment = async (paymentId: string, method: PaymentMethod): 
     await publishEvent(event);
   }
 
-  return updatedPayment;
+  return mapPaymentToInterface(updatedPayment);
 };
 
 export const findById = async (id: string): Promise<IPayment | null> => {
-  const pool = getPool();
-  const result = await pool.query('SELECT * FROM payments WHERE id = $1', [id]);
-  return result.rows.length > 0 ? mapPayment(result.rows[0]) : null;
+  const paymentRepo = getPaymentRepository();
+  const payment = await paymentRepo.findOne({ where: { id } });
+  return payment ? mapPaymentToInterface(payment) : null;
 };
 
 export const findByOrderId = async (orderId: string): Promise<IPayment | null> => {
-  const pool = getPool();
-  const result = await pool.query('SELECT * FROM payments WHERE order_id = $1', [orderId]);
-  return result.rows.length > 0 ? mapPayment(result.rows[0]) : null;
+  const paymentRepo = getPaymentRepository();
+  const payment = await paymentRepo.findOne({ where: { orderId } });
+  return payment ? mapPaymentToInterface(payment) : null;
 };
 
 // PayFast integration (simplified)
-const processPayFast = async (payment: any): Promise<{ success: boolean; transactionId: string; response: any }> => {
-  // This is a simplified version
-  // In production, you would:
-  // 1. Generate PayFast payment data
-  // 2. Create signature
-  // 3. Redirect user to PayFast
-  // 4. Handle ITN (Instant Transaction Notification) callback
-  // 5. Verify payment
-
+const processPayFast = async (payment: Payment): Promise<{ success: boolean; transactionId: string; response: any }> => {
   const merchantId = process.env.PAYFAST_MERCHANT_ID;
   const merchantKey = process.env.PAYFAST_MERCHANT_KEY;
   const passphrase = process.env.PAYFAST_PASSPHRASE;
@@ -136,15 +129,15 @@ const processPayFast = async (payment: any): Promise<{ success: boolean; transac
   const paymentData = {
     merchant_id: merchantId,
     merchant_key: merchantKey,
-    amount: payment.amount.toFixed(2),
-    item_name: `Order ${payment.order_id}`,
+    amount: payment.amount.toString(),
+    item_name: `Order ${payment.orderId}`,
     return_url: `${process.env.FRONTEND_URL}/payment/success`,
     cancel_url: `${process.env.FRONTEND_URL}/payment/cancel`,
     notify_url: `${process.env.API_URL}/payments/payfast/notify`,
   };
 
   // Generate signature
-  const signature = generatePayFastSignature(paymentData, passphrase);
+  const signature = generatePayFastSignature(paymentData, passphrase || '');
 
   // In production, return URL for redirect
   // For now, simulate success
@@ -167,20 +160,20 @@ const generatePayFastSignature = (data: any, passphrase: string): string => {
     .digest('hex');
 };
 
-const mapPayment = (row: any): IPayment => {
+const mapPaymentToInterface = (payment: Payment): IPayment => {
   return {
-    id: row.id,
-    orderId: row.order_id,
-    customerId: row.customer_id,
-    amount: parseFloat(row.amount),
-    currency: row.currency,
-    method: row.method,
-    status: row.status,
-    gatewayTransactionId: row.gateway_transaction_id,
-    gatewayResponse: row.gateway_response,
-    failureReason: row.failure_reason,
-    metadata: row.metadata,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
+    id: payment.id,
+    orderId: payment.orderId,
+    customerId: payment.customerId,
+    amount: parseFloat(payment.amount.toString()),
+    currency: payment.currency,
+    method: payment.method,
+    status: payment.status,
+    gatewayTransactionId: payment.gatewayTransactionId,
+    gatewayResponse: payment.gatewayResponse,
+    failureReason: payment.failureReason,
+    metadata: payment.metadata,
+    createdAt: payment.createdAt,
+    updatedAt: payment.updatedAt,
   };
 };

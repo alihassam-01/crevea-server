@@ -1,5 +1,4 @@
-import { getSessionRepository } from '../config/database';
-import { Session } from '@crevea/shared';
+import { getSessionRepository, Session } from '../config/database';
 import { ISession } from '@crevea/shared';
 import { MoreThan, LessThan } from 'typeorm';
 
@@ -39,6 +38,10 @@ export const deleteSession = async (refreshToken: string): Promise<void> => {
 export const deleteUserSessions = async (userId: string): Promise<void> => {
   const sessionRepo = getSessionRepository();
   await sessionRepo.delete({ userId });
+};
+
+export const deleteAllUserSessions = async (userId: string): Promise<void> => {
+  await deleteUserSessions(userId);
 };
 
 export const cleanExpiredSessions = async (): Promise<void> => {

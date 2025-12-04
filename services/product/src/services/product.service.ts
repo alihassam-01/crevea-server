@@ -1,5 +1,4 @@
-import { getProductRepository } from '../config/database';
-import { Product } from '@crevea/shared';
+import { getProductRepository, Product } from '../config/database';
 import { ProductStatus, ProductType, IProduct } from '@crevea/shared';
 import { publishEvent } from '../config/kafka';
 import { EventType, IEvent } from '@crevea/shared';
@@ -180,7 +179,7 @@ const mapProductToInterface = (product: Product): IProduct => {
     shopId: product.shopId,
     name: product.name,
     slug: product.slug,
-    description: product.description,
+    description: product.description || '',
     shortDescription: product.shortDescription,
     type: product.type,
     status: product.status,
@@ -189,11 +188,11 @@ const mapProductToInterface = (product: Product): IProduct => {
     images: product.images,
     price: parseFloat(product.price.toString()),
     compareAtPrice: product.compareAtPrice ? parseFloat(product.compareAtPrice.toString()) : undefined,
-    currency: product.currency,
+    currency: product.currency || 'ZAR',
     sku: product.sku,
     weight: product.weight,
-    dimensions: product.dimensions,
-    attributes: product.attributes,
+    dimensions: product.dimensions as any,
+    attributes: product.attributes as any,
     rating: parseFloat(product.rating.toString()),
     totalReviews: product.totalReviews,
     totalSales: product.totalSales,

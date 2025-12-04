@@ -1,14 +1,10 @@
 import speakeasy from 'speakeasy';
 import QRCode from 'qrcode';
 
-/**
- * Generate MFA secret and QR code
- */
-export const generateMFASecret = async (email: string) => {
+export const generateMFASecret = async (email: string): Promise<{ secret: string; qrCode: string }> => {
   const secret = speakeasy.generateSecret({
     name: `Crevea (${email})`,
-    issuer: 'Crevea',
-    length: 32,
+    issuer: 'Crevea Marketplace',
   });
 
   const qrCode = await QRCode.toDataURL(secret.otpauth_url!);
@@ -19,9 +15,6 @@ export const generateMFASecret = async (email: string) => {
   };
 };
 
-/**
- * Verify MFA token
- */
 export const verifyMFAToken = (secret: string, token: string): boolean => {
   return speakeasy.totp.verify({
     secret,
