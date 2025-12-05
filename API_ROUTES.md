@@ -20,6 +20,8 @@
 - [Payment Service (Port 3005)](#payment-service-port-3005)
 - [Review Service (Port 3008)](#review-service-port-3008)
 - [Notification Service (Port 3006)](#notification-service-port-3006)
+- [Admin Service (Port 3009)](#admin-service-port-3009)
+- [Promotion Service (Port 3010)](#promotion-service-port-3010)
 - [Common Response Formats](#common-response-formats)
 - [Error Codes](#error-codes)
 
@@ -1784,6 +1786,271 @@ ws.onmessage = (event) => {
   "data": {
     "orderId": "uuid"
   }
+}
+```
+
+---
+
+
+---
+
+## Admin Service (Port 3009)
+
+Base URL: `http://localhost:3009`
+
+### Admin Endpoints
+
+#### 1. Get Dashboard Stats
+
+**GET** `/admin/dashboard`
+
+🔒 **Requires Authentication** | **Permission:** ADMIN_DASHBOARD
+
+Get admin dashboard statistics.
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "totalUsers": 1500,
+    "totalShops": 50,
+    "totalOrders": 3200,
+    "totalRevenue": 150000,
+    "pendingShops": 5,
+    "pendingReviews": 12
+  }
+}
+```
+
+---
+
+#### 2. Get Users
+
+**GET** `/admin/users`
+
+🔒 **Requires Authentication** | **Permission:** USER_READ
+
+Get list of users.
+
+**Query Parameters:**
+- `page` (default: 1)
+- `limit` (default: 20)
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "items": [
+      {
+        "id": "uuid",
+        "email": "user@example.com",
+        "role": "CUSTOMER",
+        "status": "ACTIVE",
+        "createdAt": "2025-12-04T10:00:00Z"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 20,
+      "total": 1500,
+      "totalPages": 75
+    }
+  }
+}
+```
+
+---
+
+#### 3. Get Pending Shops
+
+**GET** `/admin/shops/pending`
+
+🔒 **Requires Authentication** | **Permission:** SHOP_APPROVE
+
+Get shops waiting for approval.
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "uuid",
+      "name": "New Shop",
+      "ownerId": "uuid",
+      "submittedAt": "2025-12-04T10:00:00Z"
+    }
+  ]
+}
+```
+
+---
+
+#### 4. Get Pending Reviews
+
+**GET** `/admin/reviews/pending`
+
+🔒 **Requires Authentication** | **Permission:** REVIEW_MODERATE
+
+Get reviews waiting for moderation.
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "uuid",
+      "type": "PRODUCT",
+      "rating": 1,
+      "comment": "Spam review...",
+      "createdAt": "2025-12-04T10:00:00Z"
+    }
+  ]
+}
+```
+
+---
+
+#### 5. System Health
+
+**GET** `/admin/health/system`
+
+🔒 **Requires Authentication** | **Permission:** ADMIN_DASHBOARD
+
+Get system health status.
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "cpu": 45,
+    "memory": 60,
+    "uptime": 3600,
+    "services": {
+      "auth": "UP",
+      "shop": "UP",
+      "product": "UP"
+    }
+  }
+}
+```
+
+---
+
+## Promotion Service (Port 3010)
+
+Base URL: `http://localhost:3010`
+
+### Promotion Endpoints
+
+#### 1. Create Discount Code
+
+**POST** `/promotions/discounts`
+
+🔒 **Requires Authentication**
+
+Create a new discount code.
+
+**Request Body:**
+```json
+{
+  "code": "SUMMER2025",
+  "discountType": "PERCENTAGE",
+  "discountValue": 20,
+  "minPurchaseAmount": 50,
+  "validFrom": "2025-06-01T00:00:00Z",
+  "validTo": "2025-08-31T23:59:59Z",
+  "usageLimit": 1000
+}
+```
+
+**Response (201 Created):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "uuid",
+    "code": "SUMMER2025",
+    "createdAt": "2025-12-04T10:00:00Z"
+  }
+}
+```
+
+---
+
+#### 2. Validate Discount Code
+
+**POST** `/promotions/discounts/validate`
+
+Validate a discount code.
+
+**Request Body:**
+```json
+{
+  "code": "SUMMER2025"
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "valid": true,
+    "discountType": "PERCENTAGE",
+    "discountValue": 20,
+    "minPurchaseAmount": 50
+  }
+}
+```
+
+---
+
+#### 3. Get Active Promotions
+
+**GET** `/promotions/active`
+
+Get list of active promotions.
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "uuid",
+      "title": "Summer Sale",
+      "description": "20% off all summer items",
+      "banner": "https://example.com/summer.jpg"
+    }
+  ]
+}
+```
+
+---
+
+#### 4. Get Featured Products
+
+**GET** `/promotions/featured`
+
+Get list of featured products.
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "uuid",
+      "name": "Featured Product",
+      "price": 99.99,
+      "image": "https://example.com/product.jpg"
+    }
+  ]
 }
 ```
 
