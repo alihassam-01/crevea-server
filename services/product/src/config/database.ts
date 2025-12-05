@@ -11,21 +11,21 @@ export class Product {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column()
+  @Column({ type: 'varchar' })
   @Index()
   shopId!: string;
 
-  @Column()
+  @Column({ type: 'varchar' })
   name!: string;
 
-  @Column({ unique: true })
+  @Column({ type: 'varchar', unique: true })
   @Index()
   slug!: string;
 
   @Column({ type: 'text', nullable: true })
   description?: string;
 
-  @Column({ length: 500, nullable: true })
+  @Column({ type: 'varchar', length: 500, nullable: true })
   shortDescription?: string;
 
   @Column({
@@ -43,7 +43,7 @@ export class Product {
   @Index()
   status!: ProductStatus;
 
-  @Column({ length: 50 })
+  @Column({ type: 'varchar', length: 50 })
   @Index()
   category!: string;
 
@@ -59,10 +59,10 @@ export class Product {
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
   compareAtPrice?: number;
 
-  @Column({ length: 3, default: 'ZAR' })
+  @Column({ type: 'varchar', length: 3, default: 'ZAR' })
   currency!: string;
 
-  @Column({ length: 100, nullable: true })
+  @Column({ type: 'varchar', length: 100, nullable: true })
   sku?: string;
 
   @Column({ type: 'int', nullable: true })
@@ -77,13 +77,13 @@ export class Product {
   @Column({ type: 'decimal', precision: 3, scale: 2, default: 0 })
   rating!: number;
 
-  @Column({ default: 0 })
+  @Column({ type: 'int', default: 0 })
   totalReviews!: number;
 
-  @Column({ default: 0 })
+  @Column({ type: 'int', default: 0 })
   totalSales!: number;
 
-  @Column({ default: false })
+  @Column({ type: 'boolean', default: false })
   isFeatured!: boolean;
 
   @CreateDateColumn()
@@ -98,26 +98,26 @@ export class Inventory {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column()
+  @Column({ type: 'varchar' })
   @Index()
   productId!: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   variationId?: string;
 
-  @Column({ default: 0 })
+  @Column({ type: 'int', default: 0 })
   stock!: number;
 
-  @Column({ default: 0 })
+  @Column({ type: 'int', default: 0 })
   reserved!: number;
 
-  @Column({ default: 0 })
+  @Column({ type: 'int', default: 0 })
   available!: number;
 
-  @Column({ default: 10 })
+  @Column({ type: 'int', default: 10 })
   lowStockThreshold!: number;
 
-  @Column({ nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   restockDate?: Date;
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
@@ -129,20 +129,20 @@ export class ProductVariation {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column()
+  @Column({ type: 'varchar' })
   @Index()
   productId!: string;
 
-  @Column()
+  @Column({ type: 'varchar' })
   name!: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   sku?: string;
 
   @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
   priceAdjustment!: number;
 
-  @Column({ default: 0 })
+  @Column({ type: 'int', default: 0 })
   stock!: number;
 
   @Column({ type: 'text', array: true, default: '{}' })

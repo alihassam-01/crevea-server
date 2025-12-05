@@ -11,11 +11,11 @@ export class Order {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column({ unique: true })
+  @Column({ type: 'varchar', unique: true })
   @Index()
   orderNumber!: string;
 
-  @Column()
+  @Column({ type: 'varchar' })
   @Index()
   customerId!: string;
 
@@ -45,7 +45,7 @@ export class Order {
   @Column({ type: 'jsonb' })
   shippingAddress!: Record<string, any>;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   trackingNumber?: string;
 
   @Column({ type: 'jsonb', nullable: true })
@@ -63,22 +63,22 @@ export class OrderItem {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column()
+  @Column({ type: 'varchar' })
   @Index()
   orderId!: string;
 
-  @Column()
+  @Column({ type: 'varchar' })
   @Index()
   productId!: string;
 
-  @Column()
+  @Column({ type: 'varchar' })
   @Index()
   shopId!: string;
 
-  @Column()
+  @Column({ type: 'varchar' })
   productName!: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   productImage?: string;
 
   @Column({ type: 'int' })
@@ -102,11 +102,11 @@ export class ReturnRequest {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column()
+  @Column({ type: 'varchar' })
   @Index()
   orderId!: string;
 
-  @Column()
+  @Column({ type: 'varchar' })
   @Index()
   customerId!: string;
 

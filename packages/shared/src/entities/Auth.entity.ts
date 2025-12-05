@@ -6,7 +6,7 @@ export class OAuthAccount {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column()
+  @Column({ type: 'varchar' })
   @Index()
   userId!: string;
 
@@ -16,11 +16,11 @@ export class OAuthAccount {
   })
   provider!: OAuthProvider;
 
-  @Column()
+  @Column({ type: 'varchar' })
   @Index()
   providerId!: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   email?: string;
 
   @Column({ type: 'jsonb', nullable: true })
@@ -39,17 +39,17 @@ export class Session {
   @Index()
   userId!: string;
 
-  @Column({ unique: true })
+  @Column({ type: 'varchar', unique: true })
   @Index()
   refreshToken!: string;
 
   @Column()
   expiresAt!: Date;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   ipAddress?: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   userAgent?: string;
 
   @CreateDateColumn()
@@ -65,14 +65,14 @@ export class PasswordResetToken {
   @Index()
   userId!: string;
 
-  @Column({ unique: true })
+  @Column({ type: 'varchar', unique: true })
   @Index()
   token!: string;
 
-  @Column()
+  @Column({ type: 'timestamp' })
   expiresAt!: Date;
 
-  @Column({ default: false })
+  @Column({ type: 'boolean', default: false })
   used!: boolean;
 
   @CreateDateColumn()

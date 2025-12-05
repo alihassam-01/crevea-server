@@ -11,14 +11,14 @@ export class Notification {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column()
+  @Column({ type: 'varchar' })
   @Index()
   userId!: string;
 
   @Column({ type: 'varchar', length: 50 })
   type!: NotificationType;
 
-  @Column({ length: 255 })
+  @Column({ type: 'varchar', length: 255 })
   title!: string;
 
   @Column({ type: 'text' })
@@ -27,7 +27,7 @@ export class Notification {
   @Column({ type: 'jsonb', nullable: true })
   data?: Record<string, any>;
 
-  @Column({ default: false })
+  @Column({ type: 'boolean', default: false })
   @Index()
   read!: boolean;
 

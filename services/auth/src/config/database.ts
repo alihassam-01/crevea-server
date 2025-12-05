@@ -14,23 +14,23 @@ export class User {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column({ unique: true })
+  @Column({ type: 'varchar', unique: true })
   @Index()
   email!: string;
 
-  @Column()
+  @Column({ type: 'varchar' })
   passwordHash!: string;
 
-  @Column()
+  @Column({ type: 'varchar' })
   firstName!: string;
 
-  @Column()
+  @Column({ type: 'varchar' })
   lastName!: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   phone?: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   avatar?: string;
 
   @Column({
@@ -49,13 +49,13 @@ export class User {
   @Index()
   status!: UserStatus;
 
-  @Column({ default: false })
+  @Column({ type: 'boolean', default: false })
   emailVerified!: boolean;
 
-  @Column({ default: false })
+  @Column({ type: 'boolean', default: false })
   mfaEnabled!: boolean;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   mfaSecret?: string;
 
   @Column({ type: 'jsonb', nullable: true })
@@ -67,7 +67,7 @@ export class User {
   @UpdateDateColumn()
   updatedAt!: Date;
 
-  @Column({ nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   lastLoginAt?: Date;
 }
 
@@ -76,7 +76,7 @@ export class OAuthAccount {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column()
+  @Column({ type: 'varchar' })
   @Index()
   userId!: string;
 
@@ -86,11 +86,11 @@ export class OAuthAccount {
   })
   provider!: OAuthProvider;
 
-  @Column()
+  @Column({ type: 'varchar' })
   @Index()
   providerId!: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   email?: string;
 
   @Column({ type: 'jsonb', nullable: true })
@@ -105,21 +105,21 @@ export class Session {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column()
+  @Column({ type: 'varchar' })
   @Index()
   userId!: string;
 
-  @Column({ unique: true })
+  @Column({ type: 'varchar', unique: true })
   @Index()
   refreshToken!: string;
 
-  @Column()
+  @Column({ type: 'timestamp' })
   expiresAt!: Date;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   ipAddress?: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   userAgent?: string;
 
   @CreateDateColumn()
@@ -131,18 +131,18 @@ export class PasswordResetToken {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column()
+  @Column({ type: 'varchar' })
   @Index()
   userId!: string;
 
-  @Column({ unique: true })
+  @Column({ type: 'varchar', unique: true })
   @Index()
   token!: string;
 
-  @Column()
+  @Column({ type: 'timestamp' })
   expiresAt!: Date;
 
-  @Column({ default: false })
+  @Column({ type: 'boolean', default: false })
   used!: boolean;
 
   @CreateDateColumn()
@@ -154,18 +154,18 @@ export class EmailVerificationToken {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column()
+  @Column({ type: 'varchar' })
   @Index()
   userId!: string;
 
-  @Column({ unique: true })
+  @Column({ type: 'varchar', unique: true })
   @Index()
   token!: string;
 
-  @Column()
+  @Column({ type: 'timestamp' })
   expiresAt!: Date;
 
-  @Column({ default: false })
+  @Column({ type: 'boolean', default: false })
   used!: boolean;
 
   @CreateDateColumn()

@@ -13,21 +13,21 @@ export class Review {
   })
   type!: ReviewType;
 
-  @Column()
+  @Column({ type: 'varchar' })
   @Index()
   targetId!: string;
 
-  @Column()
+  @Column({ type: 'varchar' })
   @Index()
   customerId!: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   orderId?: string;
 
   @Column({ type: 'int' })
   rating!: number;
 
-  @Column({ length: 255, nullable: true })
+  @Column({ type: 'varchar', length: 255, nullable: true })
   title?: string;
 
   @Column({ type: 'text', nullable: true })
@@ -44,10 +44,10 @@ export class Review {
   @Index()
   status!: ReviewStatus;
 
-  @Column({ default: 0 })
+  @Column({ type: 'int', default: 0 })
   helpfulCount!: number;
 
-  @Column({ default: false })
+  @Column({ type: 'boolean', default: false })
   verifiedPurchase!: boolean;
 
   @Column({ type: 'jsonb', nullable: true })

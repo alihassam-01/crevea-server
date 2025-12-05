@@ -6,23 +6,23 @@ export class User {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column({ unique: true })
+  @Column({ type: 'varchar', unique: true })
   @Index()
   email!: string;
 
-  @Column()
+  @Column({ type: 'varchar' })
   passwordHash!: string;
 
-  @Column()
+  @Column({ type: 'varchar' })
   firstName!: string;
 
-  @Column()
+  @Column({ type: 'varchar' })
   lastName!: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   phone?: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   avatar?: string;
 
   @Column({
@@ -41,13 +41,13 @@ export class User {
   @Index()
   status!: UserStatus;
 
-  @Column({ default: false })
+  @Column({ type: 'boolean', default: false })
   emailVerified!: boolean;
 
-  @Column({ default: false })
+  @Column({ type: 'boolean', default: false })
   mfaEnabled!: boolean;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   mfaSecret?: string;
 
   @Column({ type: 'jsonb', nullable: true })
@@ -59,6 +59,6 @@ export class User {
   @UpdateDateColumn()
   updatedAt!: Date;
 
-  @Column({ nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   lastLoginAt?: Date;
 }

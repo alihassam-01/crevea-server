@@ -1,0 +1,11 @@
+D:\Crevea\crevea-server\node_modules\jsdom\lib\jsdom\browser\parser\html.js:3
+const parse5 = require("parse5");
+               ^
+
+Error [ERR_REQUIRE_ESM]: require() of ES Module D:\Crevea\crevea-server\node_modules\parse5\dist\index.js from D:\Crevea\crevea-server\node_modules\jsdom\lib\jsdom\browser\parser\html.js not supported.
+Instead change the require of index.js in D:\Crevea\crevea-server\node_modules\jsdom\lib\jsdom\browser\parser\html.js to a dynamic import() which is available in all CommonJS modules.
+    at Object.<anonymous> (D:\Crevea\crevea-server\node_modules\jsdom\lib\jsdom\browser\parser\html.js:3:16) {
+  code: 'ERR_REQUIRE_ESM'
+}
+
+Node.js v20.17.0

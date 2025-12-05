@@ -11,24 +11,24 @@ export class Shop {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column({ unique: true })
+  @Column({ type: 'varchar', unique: true })
   @Index()
   slug!: string;
 
-  @Column()
+  @Column({ type: 'varchar' })
   @Index()
   sellerId!: string;
 
-  @Column()
+  @Column({ type: 'varchar' })
   name!: string;
 
   @Column({ type: 'text', nullable: true })
   description?: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   logo?: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   banner?: string;
 
   @Column({
@@ -57,10 +57,10 @@ export class Shop {
   @Column({ type: 'jsonb', nullable: true })
   address?: Record<string, any>;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   phone?: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   email?: string;
 
   @Column({ type: 'jsonb', nullable: true })
@@ -72,10 +72,10 @@ export class Shop {
   @Column({ type: 'decimal', precision: 3, scale: 2, default: 0 })
   rating!: number;
 
-  @Column({ default: 0 })
+  @Column({ type: 'int', default: 0 })
   totalReviews!: number;
 
-  @Column({ default: 0 })
+  @Column({ type: 'int', default: 0 })
   totalSales!: number;
 
   @Column({ type: 'jsonb', nullable: true })

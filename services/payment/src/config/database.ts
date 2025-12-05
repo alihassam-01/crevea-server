@@ -12,18 +12,18 @@ export class Payment {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column()
+  @Column({ type: 'varchar' })
   @Index()
   orderId!: string;
 
-  @Column()
+  @Column({ type: 'varchar' })
   @Index()
   customerId!: string;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   amount!: number;
 
-  @Column({ length: 3, default: 'ZAR' })
+  @Column({ type: 'varchar', length: 3, default: 'ZAR' })
   currency!: string;
 
   @Column({
@@ -40,7 +40,7 @@ export class Payment {
   @Index()
   status!: PaymentStatus;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   gatewayTransactionId?: string;
 
   @Column({ type: 'jsonb', nullable: true })
