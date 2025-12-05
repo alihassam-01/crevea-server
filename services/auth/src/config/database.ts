@@ -172,9 +172,10 @@ export class EmailVerificationToken {
   createdAt!: Date;
 }
 
+
 export const AppDataSource = new DataSource({
   type: 'postgres',
-  url: process.env.DATABASE_URL,
+  url: process.env.AUTH_DATABASE_URL || process.env.DATABASE_URL,
   synchronize: process.env.NODE_ENV === 'development',
   logging: process.env.NODE_ENV === 'development',
   entities: [User, OAuthAccount, Session, PasswordResetToken, EmailVerificationToken],
@@ -190,6 +191,7 @@ export const initDatabase = async (): Promise<void> => {
     logger.info('Database connected with TypeORM');
   } catch (error) {
     logger.error('Database connection failed:', error);
+    // logger.error(process.env.AUTH_DATABASE_URL as string, error);
     throw error;
   }
 };

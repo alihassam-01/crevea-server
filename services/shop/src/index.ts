@@ -1,15 +1,13 @@
 import 'reflect-metadata';
+import 'dotenv/config';
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
-import dotenv from 'dotenv';
 import { createLogger, errorHandler, notFoundHandler } from '@crevea/shared';
 import shopRoutes from './routes/shop.routes';
 import { initDatabase } from './config/database';
 import { initRedis } from './config/redis';
 import { initKafka } from './config/kafka';
-
-dotenv.config();
 
 const logger = createLogger('shop-service');
 const PORT = parseInt(process.env.PORT || '3002', 10);
