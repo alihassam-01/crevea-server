@@ -97,19 +97,25 @@ export const findBySeller = async (sellerId: string): Promise<IShop[]> => {
 
 export const search = async (
   query: string,
-  options: { page: number; limit: number; category?: ShopCategory; status?: ShopStatus; search?: string }
+  options: { page: number; limit: number; category?: ShopCategory; status?: ShopStatus; verificationStatus?: VerificationStatus; search?: string }
 ): Promise<{ shops: IShop[]; total: number }> => {
   const shopRepo = getShopRepository();
   const { page, limit, category, status } = options;
   const skip = (page - 1) * limit;
 
+  const { verificationStatus } = options;
+
   const where: any = {
     status: status || ShopStatus.ACTIVE,
-    verificationStatus: VerificationStatus.APPROVED,
   };
 
   if (category) {
     where.category = category;
+  }
+
+  // Only filter by verificationStatus when explicitly provided
+  if (typeof verificationStatus !== 'undefined') {
+    where.verificationStatus = verificationStatus;
   }
 
   if (query) {
