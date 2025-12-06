@@ -16,7 +16,7 @@ const createProductSchema = z.object({
   compareAtPrice: z.number().positive().optional(),
   sku: z.string().optional(),
   weight: z.number().optional(),
-  attributes: z.record(z.any()),
+  attributes: z.record(z.any()).optional(),
 });
 
 const updateProductSchema = createProductSchema.partial();

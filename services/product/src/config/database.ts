@@ -71,8 +71,8 @@ export class Product {
   @Column({ type: 'jsonb', nullable: true })
   dimensions?: Record<string, any>;
 
-  @Column({ type: 'jsonb' })
-  attributes!: Record<string, any>;
+  @Column({ type: 'jsonb', nullable: true, default: {} })
+  attributes?: Record<string, any>;
 
   @Column({ type: 'decimal', precision: 3, scale: 2, default: 0 })
   rating!: number;

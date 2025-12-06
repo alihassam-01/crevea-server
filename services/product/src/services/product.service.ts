@@ -51,7 +51,7 @@ interface CreateProductData {
   sku?: string;
   weight?: number;
   dimensions?: any;
-  attributes: any;
+  attributes?: any;
 }
 
 export const create = async (data: CreateProductData): Promise<IProduct> => {
@@ -80,7 +80,7 @@ export const create = async (data: CreateProductData): Promise<IProduct> => {
     sku: data.sku,
     weight: data.weight,
     dimensions: data.dimensions,
-    attributes: data.attributes,
+    attributes: data.attributes || {},
     rating: 0,
     totalReviews: 0,
     totalSales: 0,
