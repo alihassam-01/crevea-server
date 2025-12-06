@@ -2219,7 +2219,7 @@ JWT_EXPIRES_IN=15m
 JWT_REFRESH_EXPIRES_IN=7d
 
 # Frontend
-FRONTEND_URL=http://localhost:5173
+FRONTEND_URL=http://localhost:9011
 
 # OAuth (Auth Service)
 GOOGLE_CLIENT_ID=your-google-client-id

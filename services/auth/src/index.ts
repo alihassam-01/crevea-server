@@ -27,7 +27,7 @@ const buildServer = async () => {
 
   // Register plugins
   await server.register(cors, {
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: process.env.FRONTEND_URL || 'http://localhost:9011',
     credentials: true,
   });
 

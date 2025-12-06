@@ -41,6 +41,17 @@ export const authenticate = async (
     }
 
     request.user = payload;
+    // Normalize role to uppercase string to avoid casing issues
+    if (request.user && typeof request.user.role === 'string') {
+      request.user.role = request.user.role.toString().toUpperCase() as any;
+    }
+    // Debug log: show authenticated payload (safe to log id and role)
+    console.log('[auth] user payload set:', {
+      userId: request.user.userId,
+      email: request.user.email,
+      role: request.user.role,
+      sessionId: request.user.sessionId,
+    });
   } catch (error) {
     if (error instanceof AuthenticationError) {
       throw error;
@@ -57,6 +68,9 @@ export const authorize = (...roles: UserRole[]) => {
     if (!request.user) {
       throw new AuthenticationError('User not authenticated');
     }
+
+    // Debug log: who is required and what the user has
+    console.log('[auth] authorize check. required:', roles, 'userRole:', request.user.role);
 
     if (!roles.includes(request.user.role)) {
       throw new AuthorizationError(

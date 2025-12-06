@@ -19,7 +19,7 @@ const buildServer = async () => {
   });
 
   await server.register(cors, {
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: process.env.FRONTEND_URL || 'http://localhost:9011',
     credentials: true,
   });
 
@@ -31,8 +31,7 @@ const buildServer = async () => {
     return { status: 'ok', service: 'shop', timestamp: new Date().toISOString() };
   });
 
-  await server.register(shopRoutes, { prefix: '/shops' });
-
+  await server.register(shopRoutes, { prefix: '/api/shops' });
   server.setErrorHandler(errorHandler);
   server.setNotFoundHandler(notFoundHandler);
 

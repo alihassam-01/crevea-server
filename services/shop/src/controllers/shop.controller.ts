@@ -10,7 +10,7 @@ export const createShop = async (sellerId: string, data: any) => {
     throw new ConflictError('Seller already has a shop');
   }
 
-  const shop = await shopService.create(data);
+  const shop = await shopService.create({ ...data, sellerId });
   return successResponse(shop);
 };
 

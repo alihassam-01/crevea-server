@@ -19,7 +19,7 @@ const buildServer = async () => {
   const server = Fastify({ logger: false, trustProxy: true });
 
   await server.register(cors, {
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: process.env.FRONTEND_URL || 'http://localhost:9011',
     credentials: true,
   });
 

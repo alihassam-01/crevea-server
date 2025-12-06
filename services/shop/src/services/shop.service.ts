@@ -3,13 +3,13 @@ import { ShopCategory, ShopStatus, VerificationStatus, IShop } from '@crevea/sha
 import { publishEvent } from '../config/kafka';
 import { EventType, IEvent } from '@crevea/shared';
 import { v4 as uuidv4 } from 'uuid';
-import { sanitizeHtml, sanitizeText } from '@crevea/shared';
+import { sanitizeHtml, sanitizeText, slugify } from '@crevea/shared';
 import { Like } from 'typeorm';
 
 interface CreateShopData {
   sellerId: string;
   name: string;
-  slug: string;
+  slug?: string;
   description?: string;
   logo?: string;
   banner?: string;
@@ -27,17 +27,22 @@ export const create = async (data: CreateShopData): Promise<IShop> => {
   const sanitizedName = sanitizeText(data.name);
   const sanitizedDescription = data.description ? sanitizeHtml(data.description) : undefined;
 
-  // Check if shop with slug exists
-  const existing = await shopRepo.findOne({ where: { slug: data.slug } });
+  // Generate slug from name if not provided
+  let slug = data.slug ? slugify(data.slug) : slugify(sanitizedName);
+  
+  // Ensure slug is unique
+  let existing = await shopRepo.findOne({ where: { slug } });
   if (existing) {
-    throw new Error('Shop with this slug already exists');
+    // Append a random string to make it unique
+    const randomSuffix = Math.random().toString(36).substring(2, 8);
+    slug = `${slug}-${randomSuffix}`;
   }
 
   // Create shop
   const shop = shopRepo.create({
     sellerId: data.sellerId,
     name: sanitizedName,
-    slug: data.slug,
+    slug: slug,
     description: sanitizedDescription,
     logo: data.logo,
     banner: data.banner,
