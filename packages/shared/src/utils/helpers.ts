@@ -33,9 +33,9 @@ export const capitalize = (text: string): string => {
  */
 export const formatCurrency = (
   amount: number,
-  currency: string = 'ZAR'
+  currency: string = 'PKR'
 ): string => {
-  return new Intl.NumberFormat('en-ZA', {
+  return new Intl.NumberFormat('en-PK', {
     style: 'currency',
     currency,
   }).format(amount);

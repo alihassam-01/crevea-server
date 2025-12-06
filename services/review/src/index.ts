@@ -30,7 +30,7 @@ const buildServer = async () => {
     timestamp: new Date().toISOString(),
   }));
 
-  await server.register(reviewRoutes, { prefix: '/reviews' });
+  await server.register(reviewRoutes, { prefix: '/api/reviews' });
 
   server.setErrorHandler(errorHandler);
   server.setNotFoundHandler(notFoundHandler);

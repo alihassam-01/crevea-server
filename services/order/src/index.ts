@@ -31,8 +31,8 @@ const buildServer = async () => {
     timestamp: new Date().toISOString(),
   }));
 
-  await server.register(orderRoutes, { prefix: '/orders' });
-  await server.register(cartRoutes, { prefix: '/cart' });
+  await server.register(orderRoutes, { prefix: '/api/orders' });
+  await server.register(cartRoutes, { prefix: '/api/cart' });
 
   server.setErrorHandler(errorHandler);
   server.setNotFoundHandler(notFoundHandler);

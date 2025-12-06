@@ -1,9 +1,9 @@
 # Crevea API Routes Documentation
 
 > **Base URL**: `http://localhost:3001` (Auth Service), `http://localhost:3002` (Shop Service), etc.
-> 
+>
 > **Version**: 1.0.0
-> 
+>
 > **Last Updated**: 2025-12-04
 
 ## Table of Contents
@@ -57,15 +57,16 @@ Base URL: `http://localhost:3001`
 
 #### 1. Register User
 
-**POST** `/auth/register`
+**POST** `/api/auth/register`
 
 Create a new user account.
 
 **Request Body:**
+
 ```json
 {
-  "email": "user@example.com",
-  "password": "SecurePass123!",
+  "email": "ali.hassam1@gmail.com",
+  "password": "Hello@1234",
   "firstName": "John",
   "lastName": "Doe",
   "role": "CUSTOMER"
@@ -73,6 +74,7 @@ Create a new user account.
 ```
 
 **Validation Rules:**
+
 - `email`: Valid email format
 - `password`: Min 8 characters, must contain uppercase, lowercase, number, and special character
 - `firstName`: 1-100 characters
@@ -80,13 +82,14 @@ Create a new user account.
 - `role`: Either `CUSTOMER` or `SELLER` (default: `CUSTOMER`)
 
 **Response (201 Created):**
+
 ```json
 {
   "success": true,
   "data": {
     "user": {
       "id": "uuid",
-      "email": "user@example.com",
+      "email": "ali.hassam1@gmail.com",
       "firstName": "John",
       "lastName": "Doe",
       "role": "CUSTOMER",
@@ -104,26 +107,28 @@ Create a new user account.
 
 #### 2. Login
 
-**POST** `/auth/login`
+**POST** `/api/auth/login`
 
 Authenticate user and receive tokens.
 
 **Request Body:**
+
 ```json
 {
-  "email": "user@example.com",
+  "email": "ali.hassam1@gmail.com",
   "password": "SecurePass123!"
 }
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "success": true,
   "data": {
     "user": {
       "id": "uuid",
-      "email": "user@example.com",
+      "email": "ali.hassam1@gmail.com",
       "firstName": "John",
       "lastName": "Doe",
       "role": "CUSTOMER",
@@ -136,17 +141,18 @@ Authenticate user and receive tokens.
 }
 ```
 
-**Note:** If MFA is enabled, the response will include `requiresMFA: true` and you'll need to call `/auth/mfa/verify`.
+**Note:** If MFA is enabled, the response will include `requiresMFA: true` and you'll need to call `/api/auth/mfa/verify`.
 
 ---
 
 #### 3. Refresh Token
 
-**POST** `/auth/refresh`
+**POST** `/api/auth/refresh`
 
 Get a new access token using refresh token.
 
 **Request Body:**
+
 ```json
 {
   "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
@@ -154,6 +160,7 @@ Get a new access token using refresh token.
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -168,7 +175,7 @@ Get a new access token using refresh token.
 
 #### 4. Logout
 
-**POST** `/auth/logout`
+**POST** `/api/auth/logout`
 
 🔒 **Requires Authentication**
 
@@ -180,11 +187,12 @@ Invalidate current session.
 
 #### 5. Forgot Password
 
-**POST** `/auth/forgot-password`
+**POST** `/api/auth/forgot-password`
 
 Request password reset email.
 
 **Request Body:**
+
 ```json
 {
   "email": "user@example.com"
@@ -192,6 +200,7 @@ Request password reset email.
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -203,11 +212,12 @@ Request password reset email.
 
 #### 6. Reset Password
 
-**POST** `/auth/reset-password`
+**POST** `/api/auth/reset-password`
 
 Reset password using token from email.
 
 **Request Body:**
+
 ```json
 {
   "token": "reset_token_from_email",
@@ -216,6 +226,7 @@ Reset password using token from email.
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -227,11 +238,12 @@ Reset password using token from email.
 
 #### 7. Verify Email
 
-**POST** `/auth/verify-email`
+**POST** `/api/auth/verify-email`
 
 Verify email address using token.
 
 **Request Body:**
+
 ```json
 {
   "token": "verification_token_from_email"
@@ -239,6 +251,7 @@ Verify email address using token.
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -250,19 +263,20 @@ Verify email address using token.
 
 #### 8. Get Current User
 
-**GET** `/auth/me`
+**GET** `/api/auth/me`
 
 🔒 **Requires Authentication**
 
 Get current authenticated user details.
 
 **Response (200 OK):**
+
 ```json
 {
   "success": true,
   "data": {
     "id": "uuid",
-    "email": "user@example.com",
+    "email": "ali.hassam1@gmail.com",
     "firstName": "John",
     "lastName": "Doe",
     "role": "CUSTOMER",
@@ -283,7 +297,7 @@ Get current authenticated user details.
 
 #### 1. Google OAuth
 
-**GET** `/oauth/google`
+**GET** `/api/oauth/google`
 
 Redirect to Google OAuth consent screen.
 
@@ -291,29 +305,31 @@ Redirect to Google OAuth consent screen.
 
 ---
 
-**GET** `/oauth/google/callback`
+**GET** `/api/oauth/google/callback`
 
 Google OAuth callback (handled automatically).
 
 **Query Parameters:**
+
 - `code`: Authorization code from Google
 
 **Response:** Redirects to frontend with tokens:
+
 ```
-{FRONTEND_URL}/auth/callback?accessToken={token}&refreshToken={token}
+{FRONTEND_URL}/api/auth/callback?accessToken={token}&refreshToken={token}
 ```
 
 ---
 
 #### 2. Facebook OAuth
 
-**GET** `/oauth/facebook`
+**GET** `/api/oauth/facebook`
 
 Redirect to Facebook OAuth consent screen.
 
 ---
 
-**GET** `/oauth/facebook/callback`
+**GET** `/api/oauth/facebook/callback`
 
 Facebook OAuth callback.
 
@@ -321,13 +337,13 @@ Facebook OAuth callback.
 
 #### 3. Apple OAuth
 
-**GET** `/oauth/apple`
+**GET** `/api/oauth/apple`
 
 Redirect to Apple OAuth consent screen.
 
 ---
 
-**POST** `/oauth/apple/callback`
+**POST** `/api/oauth/apple/callback`
 
 Apple OAuth callback.
 
@@ -337,13 +353,14 @@ Apple OAuth callback.
 
 #### 1. Enable MFA
 
-**POST** `/auth/mfa/enable`
+**POST** `/api/auth/mfa/enable`
 
 🔒 **Requires Authentication**
 
 Enable two-factor authentication.
 
 **Request Body:**
+
 ```json
 {
   "password": "current_password"
@@ -351,6 +368,7 @@ Enable two-factor authentication.
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -367,13 +385,14 @@ Enable two-factor authentication.
 
 #### 2. Verify MFA
 
-**POST** `/auth/mfa/verify`
+**POST** `/api/auth/mfa/verify`
 
 🔒 **Requires Authentication**
 
 Verify MFA token during login or setup.
 
 **Request Body:**
+
 ```json
 {
   "token": "123456"
@@ -381,9 +400,11 @@ Verify MFA token during login or setup.
 ```
 
 **Validation:**
+
 - `token`: Exactly 6 digits
 
 **Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -395,13 +416,14 @@ Verify MFA token during login or setup.
 
 #### 3. Disable MFA
 
-**POST** `/auth/mfa/disable`
+**POST** `/api/auth/mfa/disable`
 
 🔒 **Requires Authentication**
 
 Disable two-factor authentication.
 
 **Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -419,13 +441,14 @@ Base URL: `http://localhost:3002`
 
 #### 1. Create Shop
 
-**POST** `/shop`
+**POST** `/api/shops`
 
 🔒 **Requires Authentication** | **Role:** SELLER
 
 Create a new shop.
 
 **Request Body:**
+
 ```json
 {
   "name": "Handmade Crafts",
@@ -452,12 +475,14 @@ Create a new shop.
 ```
 
 **Categories:**
+
 - `CROCHET`
 - `ART`
 - `PAINTING`
 - `HANDCRAFT`
 
 **Response (201 Created):**
+
 ```json
 {
   "success": true,
@@ -478,11 +503,12 @@ Create a new shop.
 
 #### 2. Get Shop
 
-**GET** `/shop/:id`
+**GET** `/api/shops/:id`
 
 Get shop details by ID.
 
 **Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -522,13 +548,14 @@ Get shop details by ID.
 
 #### 3. Update Shop
 
-**PUT** `/shop/:id`
+**PUT** `/api/shops/:id`
 
 🔒 **Requires Authentication** | **Permission:** SHOP_WRITE
 
 Update shop details.
 
 **Request Body:** (All fields optional)
+
 ```json
 {
   "name": "Updated Shop Name",
@@ -538,6 +565,7 @@ Update shop details.
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -553,7 +581,7 @@ Update shop details.
 
 #### 4. Delete Shop
 
-**DELETE** `/shop/:id`
+**DELETE** `/api/shops/:id`
 
 🔒 **Requires Authentication** | **Permission:** SHOP_DELETE
 
@@ -565,11 +593,12 @@ Delete a shop.
 
 #### 5. List Shops
 
-**GET** `/shop`
+**GET** `/api/shops`
 
 Get list of shops with pagination and filters.
 
 **Query Parameters:**
+
 - `page` (default: 1)
 - `limit` (default: 20)
 - `category` (optional): Filter by category
@@ -577,11 +606,13 @@ Get list of shops with pagination and filters.
 - `search` (optional): Search by name
 
 **Example:**
+
 ```
-GET /shop?page=1&limit=20&category=HANDCRAFT&search=craft
+GET /api/shops?page=1&limit=20&category=HANDCRAFT&search=craft
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -611,13 +642,14 @@ GET /shop?page=1&limit=20&category=HANDCRAFT&search=craft
 
 #### 6. Submit Shop Verification
 
-**POST** `/shop/:id/verify`
+**POST** `/api/shops/:id/verify`
 
 🔒 **Requires Authentication** | **Permission:** SHOP_WRITE
 
 Submit documents for shop verification.
 
 **Request Body:**
+
 ```json
 {
   "documents": [
@@ -628,6 +660,7 @@ Submit documents for shop verification.
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -643,13 +676,14 @@ Submit documents for shop verification.
 
 #### 7. Update Shop Status (Admin)
 
-**PUT** `/shop/:id/status`
+**PUT** `/api/shops/:id/status`
 
 🔒 **Requires Authentication** | **Permission:** SHOP_APPROVE
 
 Update shop status (admin only).
 
 **Request Body:**
+
 ```json
 {
   "status": "ACTIVE",
@@ -658,12 +692,14 @@ Update shop status (admin only).
 ```
 
 **Status Options:**
+
 - `PENDING`
 - `ACTIVE`
 - `SUSPENDED`
 - `CLOSED`
 
 **Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -679,16 +715,18 @@ Update shop status (admin only).
 
 #### 8. Get Shop Analytics
 
-**GET** `/shop/:id/analytics`
+**GET** `/api/shops/:id/analytics`
 
 🔒 **Requires Authentication** | **Permission:** SHOP_READ
 
 Get shop analytics and statistics.
 
 **Query Parameters:**
+
 - `period` (default: "month"): "week", "month", "year"
 
 **Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -717,13 +755,14 @@ Get shop analytics and statistics.
 
 #### 9. Get Seller's Shops
 
-**GET** `/shop/seller/my-shops`
+**GET** `/api/shops/seller/my-shops`
 
 🔒 **Requires Authentication** | **Role:** SELLER
 
 Get all shops owned by the authenticated seller.
 
 **Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -749,13 +788,14 @@ Base URL: `http://localhost:3003`
 
 #### 1. Create Product
 
-**POST** `/product`
+**POST** `/api/products`
 
 🔒 **Requires Authentication** | **Permission:** PRODUCT_WRITE
 
 Create a new product.
 
 **Request Body:**
+
 ```json
 {
   "name": "Handmade Crochet Scarf",
@@ -781,10 +821,12 @@ Create a new product.
 ```
 
 **Product Types:**
+
 - `PHYSICAL` - Physical products that need shipping
 - `DIGITAL` - Digital downloads
 
 **Response (201 Created):**
+
 ```json
 {
   "success": true,
@@ -803,11 +845,12 @@ Create a new product.
 
 #### 2. Get Product
 
-**GET** `/product/:id`
+**GET** `/api/products/:id`
 
 Get product details.
 
 **Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -846,13 +889,14 @@ Get product details.
 
 #### 3. Update Product
 
-**PUT** `/product/:id`
+**PUT** `/api/products/:id`
 
 🔒 **Requires Authentication** | **Permission:** PRODUCT_WRITE
 
 Update product details.
 
 **Request Body:** (All fields optional)
+
 ```json
 {
   "name": "Updated Product Name",
@@ -862,6 +906,7 @@ Update product details.
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -877,7 +922,7 @@ Update product details.
 
 #### 4. Delete Product
 
-**DELETE** `/product/:id`
+**DELETE** `/api/products/:id`
 
 🔒 **Requires Authentication** | **Permission:** PRODUCT_DELETE
 
@@ -889,11 +934,12 @@ Delete a product.
 
 #### 5. List Products
 
-**GET** `/product`
+**GET** `/api/products`
 
 Get list of products with pagination and filters.
 
 **Query Parameters:**
+
 - `page` (default: 1)
 - `limit` (default: 20)
 - `category` (optional)
@@ -904,11 +950,13 @@ Get list of products with pagination and filters.
 - `sortOrder` (optional): "asc", "desc"
 
 **Example:**
+
 ```
-GET /product?page=1&limit=20&category=CROCHET&minPrice=20&maxPrice=100&sortBy=price&sortOrder=asc
+GET /api/products?page=1&limit=20&category=CROCHET&minPrice=20&maxPrice=100&sortBy=price&sortOrder=asc
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -941,11 +989,12 @@ GET /product?page=1&limit=20&category=CROCHET&minPrice=20&maxPrice=100&sortBy=pr
 
 #### 6. Get Shop Products
 
-**GET** `/product/shop/:shopId`
+**GET** `/api/products/shops/:shopId`
 
 Get all products from a specific shop.
 
 **Query Parameters:**
+
 - `page` (default: 1)
 - `limit` (default: 20)
 
@@ -955,13 +1004,14 @@ Get all products from a specific shop.
 
 #### 7. Update Inventory
 
-**PUT** `/product/:id/inventory`
+**PUT** `/api/products/:id/inventory`
 
 🔒 **Requires Authentication** | **Permission:** PRODUCT_WRITE
 
 Update product inventory.
 
 **Request Body:**
+
 ```json
 {
   "stock": 25,
@@ -970,6 +1020,7 @@ Update product inventory.
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -986,13 +1037,14 @@ Update product inventory.
 
 #### 8. Add Product Variation
 
-**POST** `/product/:id/variations`
+**POST** `/api/products/:id/variations`
 
 🔒 **Requires Authentication** | **Permission:** PRODUCT_WRITE
 
 Add a product variation (e.g., different size/color).
 
 **Request Body:**
+
 ```json
 {
   "name": "Large Blue Scarf",
@@ -1007,6 +1059,7 @@ Add a product variation (e.g., different size/color).
 ```
 
 **Response (201 Created):**
+
 ```json
 {
   "success": true,
@@ -1030,13 +1083,14 @@ Base URL: `http://localhost:3004`
 
 #### 1. Create Order
 
-**POST** `/order`
+**POST** `/api/orders`
 
 🔒 **Requires Authentication**
 
 Create order from cart.
 
 **Request Body:**
+
 ```json
 {
   "shippingAddress": {
@@ -1067,6 +1121,7 @@ Create order from cart.
 ```
 
 **Payment Methods:**
+
 - `CARD`
 - `CASH_ON_DELIVERY`
 - `BANK_TRANSFER`
@@ -1075,6 +1130,7 @@ Create order from cart.
 **Note:** If `billingAddress` is omitted, shipping address will be used.
 
 **Response (201 Created):**
+
 ```json
 {
   "success": true,
@@ -1102,13 +1158,14 @@ Create order from cart.
 
 #### 2. Get Order
 
-**GET** `/order/:id`
+**GET** `/api/orders/:id`
 
 🔒 **Requires Authentication**
 
 Get order details.
 
 **Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -1150,17 +1207,19 @@ Get order details.
 
 #### 3. Get User Orders
 
-**GET** `/order`
+**GET** `/api/orders`
 
 🔒 **Requires Authentication**
 
 Get all orders for the authenticated user.
 
 **Query Parameters:**
+
 - `page` (default: 1)
 - `limit` (default: 20)
 
 **Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -1189,13 +1248,14 @@ Get all orders for the authenticated user.
 
 #### 4. Update Order Status
 
-**PUT** `/order/:id/status`
+**PUT** `/api/orders/:id/status`
 
 🔒 **Requires Authentication**
 
-Update order status (seller/admin only).
+Update order status (seller/api/admin only).
 
 **Request Body:**
+
 ```json
 {
   "status": "SHIPPED"
@@ -1203,6 +1263,7 @@ Update order status (seller/admin only).
 ```
 
 **Order Statuses:**
+
 - `PENDING`
 - `PROCESSING`
 - `SHIPPED`
@@ -1211,6 +1272,7 @@ Update order status (seller/admin only).
 - `REFUNDED`
 
 **Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -1226,13 +1288,14 @@ Update order status (seller/admin only).
 
 #### 5. Cancel Order
 
-**POST** `/order/:id/cancel`
+**POST** `/api/orders/:id/cancel`
 
 🔒 **Requires Authentication**
 
 Cancel an order.
 
 **Request Body:**
+
 ```json
 {
   "reason": "Changed my mind"
@@ -1240,6 +1303,7 @@ Cancel an order.
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -1255,13 +1319,14 @@ Cancel an order.
 
 #### 6. Get Order Tracking
 
-**GET** `/order/:id/tracking`
+**GET** `/api/orders/:id/tracking`
 
 🔒 **Requires Authentication**
 
 Get order tracking information.
 
 **Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -1302,13 +1367,14 @@ Base URL: `http://localhost:3004`
 
 #### 1. Get Cart
 
-**GET** `/cart`
+**GET** `/api/cart`
 
 🔒 **Requires Authentication**
 
 Get user's shopping cart.
 
 **Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -1337,13 +1403,14 @@ Get user's shopping cart.
 
 #### 2. Add Item to Cart
 
-**POST** `/cart/items`
+**POST** `/api/cart/items`
 
 🔒 **Requires Authentication**
 
 Add product to cart.
 
 **Request Body:**
+
 ```json
 {
   "productId": "uuid",
@@ -1357,6 +1424,7 @@ Add product to cart.
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -1372,13 +1440,14 @@ Add product to cart.
 
 #### 3. Update Cart Item
 
-**PUT** `/cart/items/:productId`
+**PUT** `/api/cart/items/:productId`
 
 🔒 **Requires Authentication**
 
 Update item quantity in cart.
 
 **Request Body:**
+
 ```json
 {
   "quantity": 3,
@@ -1387,6 +1456,7 @@ Update item quantity in cart.
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -1402,16 +1472,18 @@ Update item quantity in cart.
 
 #### 4. Remove Cart Item
 
-**DELETE** `/cart/items/:productId`
+**DELETE** `/api/cart/items/:productId`
 
 🔒 **Requires Authentication**
 
 Remove item from cart.
 
 **Query Parameters:**
+
 - `variationId` (optional)
 
 **Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -1427,7 +1499,7 @@ Remove item from cart.
 
 #### 5. Clear Cart
 
-**DELETE** `/cart`
+**DELETE** `/api/cart`
 
 🔒 **Requires Authentication**
 
@@ -1445,13 +1517,14 @@ Base URL: `http://localhost:3005`
 
 #### 1. Process Payment
 
-**POST** `/payment/process`
+**POST** `/api/payments/process`
 
 🔒 **Requires Authentication**
 
 Process payment for an order.
 
 **Request Body:**
+
 ```json
 {
   "paymentId": "uuid",
@@ -1460,6 +1533,7 @@ Process payment for an order.
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -1478,13 +1552,14 @@ Process payment for an order.
 
 #### 2. Get Payment
 
-**GET** `/payment/:id`
+**GET** `/api/payments/:id`
 
 🔒 **Requires Authentication**
 
 Get payment details.
 
 **Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -1504,7 +1579,7 @@ Get payment details.
 
 #### 3. Get Payment by Order
 
-**GET** `/payment/order/:orderId`
+**GET** `/api/payments/orders/:orderId`
 
 🔒 **Requires Authentication**
 
@@ -1516,7 +1591,7 @@ Get payment for a specific order.
 
 #### 4. PayFast Webhook
 
-**POST** `/payment/payfast/notify`
+**POST** `/api/payments/payfast/notify`
 
 PayFast payment notification webhook (no authentication required).
 
@@ -1532,13 +1607,14 @@ Base URL: `http://localhost:3008`
 
 #### 1. Create Review
 
-**POST** `/review`
+**POST** `/api/reviews`
 
 🔒 **Requires Authentication**
 
 Create a product or shop review.
 
 **Request Body:**
+
 ```json
 {
   "type": "PRODUCT",
@@ -1555,14 +1631,17 @@ Create a product or shop review.
 ```
 
 **Review Types:**
+
 - `PRODUCT` - Product review
 - `SHOP` - Shop review
 
 **Validation:**
+
 - `rating`: Integer between 1-5
 - `title`: Max 255 characters (optional)
 
 **Response (201 Created):**
+
 ```json
 {
   "success": true,
@@ -1584,15 +1663,17 @@ Create a product or shop review.
 
 #### 2. Get Reviews
 
-**GET** `/review/target/:targetId`
+**GET** `/api/reviews/target/:targetId`
 
 Get reviews for a product or shop.
 
 **Query Parameters:**
+
 - `page` (default: 1)
 - `limit` (default: 20)
 
 **Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -1638,13 +1719,14 @@ Get reviews for a product or shop.
 
 #### 3. Approve Review (Admin)
 
-**PUT** `/review/:id/approve`
+**PUT** `/api/reviews/:id/approve`
 
 🔒 **Requires Authentication** | **Permission:** REVIEW_MODERATE
 
 Approve a pending review.
 
 **Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -1660,13 +1742,14 @@ Approve a pending review.
 
 #### 4. Reject Review (Admin)
 
-**PUT** `/review/:id/reject`
+**PUT** `/api/reviews/:id/reject`
 
 🔒 **Requires Authentication** | **Permission:** REVIEW_MODERATE
 
 Reject a review.
 
 **Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -1688,18 +1771,20 @@ Base URL: `http://localhost:3006`
 
 #### 1. Get Notifications
 
-**GET** `/notification`
+**GET** `/api/notifications`
 
 🔒 **Requires Authentication**
 
 Get user notifications.
 
 **Query Parameters:**
+
 - `page` (default: 1)
 - `limit` (default: 20)
 - `unreadOnly` (optional): "true" or "false"
 
 **Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -1733,7 +1818,7 @@ Get user notifications.
 
 #### 2. Mark Notification as Read
 
-**PUT** `/notification/:id/read`
+**PUT** `/api/notifications/:id/read`
 
 🔒 **Requires Authentication**
 
@@ -1745,7 +1830,7 @@ Mark a notification as read.
 
 #### 3. Mark All as Read
 
-**PUT** `/notification/read-all`
+**PUT** `/api/notifications/read-all`
 
 🔒 **Requires Authentication**
 
@@ -1757,15 +1842,16 @@ Mark all notifications as read.
 
 #### 4. WebSocket Connection
 
-**GET** `/notification/ws` (WebSocket)
+**GET** `/api/notifications/ws` (WebSocket)
 
 🔒 **Requires Authentication** (via query param or initial message)
 
 Real-time notification updates.
 
 **Connection:**
+
 ```javascript
-const ws = new WebSocket('ws://localhost:3006/notification/ws');
+const ws = new WebSocket('ws://localhost:3006/api/notifications/ws');
 
 ws.onopen = () => {
   console.log('Connected to notifications');
@@ -1778,6 +1864,7 @@ ws.onmessage = (event) => {
 ```
 
 **Message Format:**
+
 ```json
 {
   "type": "ORDER_SHIPPED",
@@ -1791,7 +1878,6 @@ ws.onmessage = (event) => {
 
 ---
 
-
 ---
 
 ## Admin Service (Port 3009)
@@ -1802,13 +1888,14 @@ Base URL: `http://localhost:3009`
 
 #### 1. Get Dashboard Stats
 
-**GET** `/admin/dashboard`
+**GET** `/api/admin/dashboard`
 
 🔒 **Requires Authentication** | **Permission:** ADMIN_DASHBOARD
 
 Get admin dashboard statistics.
 
 **Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -1827,17 +1914,19 @@ Get admin dashboard statistics.
 
 #### 2. Get Users
 
-**GET** `/admin/users`
+**GET** `/api/admin/users`
 
 🔒 **Requires Authentication** | **Permission:** USER_READ
 
 Get list of users.
 
 **Query Parameters:**
+
 - `page` (default: 1)
 - `limit` (default: 20)
 
 **Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -1845,7 +1934,7 @@ Get list of users.
     "items": [
       {
         "id": "uuid",
-        "email": "user@example.com",
+        "email": "ali.hassam1@gmail.com",
         "role": "CUSTOMER",
         "status": "ACTIVE",
         "createdAt": "2025-12-04T10:00:00Z"
@@ -1865,13 +1954,14 @@ Get list of users.
 
 #### 3. Get Pending Shops
 
-**GET** `/admin/shops/pending`
+**GET** `/api/admin/shops/pending`
 
 🔒 **Requires Authentication** | **Permission:** SHOP_APPROVE
 
 Get shops waiting for approval.
 
 **Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -1890,13 +1980,14 @@ Get shops waiting for approval.
 
 #### 4. Get Pending Reviews
 
-**GET** `/admin/reviews/pending`
+**GET** `/api/admin/reviews/pending`
 
 🔒 **Requires Authentication** | **Permission:** REVIEW_MODERATE
 
 Get reviews waiting for moderation.
 
 **Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -1916,13 +2007,14 @@ Get reviews waiting for moderation.
 
 #### 5. System Health
 
-**GET** `/admin/health/system`
+**GET** `/api/admin/health/system`
 
 🔒 **Requires Authentication** | **Permission:** ADMIN_DASHBOARD
 
 Get system health status.
 
 **Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -1949,13 +2041,14 @@ Base URL: `http://localhost:3010`
 
 #### 1. Create Discount Code
 
-**POST** `/promotions/discounts`
+**POST** `/api/promotions/discounts`
 
 🔒 **Requires Authentication**
 
 Create a new discount code.
 
 **Request Body:**
+
 ```json
 {
   "code": "SUMMER2025",
@@ -1969,6 +2062,7 @@ Create a new discount code.
 ```
 
 **Response (201 Created):**
+
 ```json
 {
   "success": true,
@@ -1984,11 +2078,12 @@ Create a new discount code.
 
 #### 2. Validate Discount Code
 
-**POST** `/promotions/discounts/validate`
+**POST** `/api/promotions/discounts/validate`
 
 Validate a discount code.
 
 **Request Body:**
+
 ```json
 {
   "code": "SUMMER2025"
@@ -1996,6 +2091,7 @@ Validate a discount code.
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -2012,11 +2108,12 @@ Validate a discount code.
 
 #### 3. Get Active Promotions
 
-**GET** `/promotions/active`
+**GET** `/api/promotions/active`
 
 Get list of active promotions.
 
 **Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -2035,11 +2132,12 @@ Get list of active promotions.
 
 #### 4. Get Featured Products
 
-**GET** `/promotions/featured`
+**GET** `/api/promotions/featured`
 
 Get list of featured products.
 
 **Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -2106,25 +2204,26 @@ Get list of featured products.
 
 ## Error Codes
 
-| Code | HTTP Status | Description |
-|------|-------------|-------------|
-| `VALIDATION_ERROR` | 400 | Request validation failed |
-| `AUTHENTICATION_ERROR` | 401 | Invalid or missing authentication |
-| `AUTHORIZATION_ERROR` | 403 | Insufficient permissions |
-| `NOT_FOUND` | 404 | Resource not found |
-| `CONFLICT` | 409 | Resource already exists |
-| `RATE_LIMIT_ERROR` | 429 | Too many requests |
-| `PAYMENT_ERROR` | 402 | Payment processing failed |
-| `INVENTORY_ERROR` | 400 | Insufficient stock |
-| `BUSINESS_LOGIC_ERROR` | 400 | Business rule violation |
-| `EXTERNAL_SERVICE_ERROR` | 502 | External service unavailable |
-| `INTERNAL_SERVER_ERROR` | 500 | Server error |
+| Code                       | HTTP Status | Description                       |
+| -------------------------- | ----------- | --------------------------------- |
+| `VALIDATION_ERROR`       | 400         | Request validation failed         |
+| `AUTHENTICATION_ERROR`   | 401         | Invalid or missing authentication |
+| `AUTHORIZATION_ERROR`    | 403         | Insufficient permissions          |
+| `NOT_FOUND`              | 404         | Resource not found                |
+| `CONFLICT`               | 409         | Resource already exists           |
+| `RATE_LIMIT_ERROR`       | 429         | Too many requests                 |
+| `PAYMENT_ERROR`          | 402         | Payment processing failed         |
+| `INVENTORY_ERROR`        | 400         | Insufficient stock                |
+| `BUSINESS_LOGIC_ERROR`   | 400         | Business rule violation           |
+| `EXTERNAL_SERVICE_ERROR` | 502         | External service unavailable      |
+| `INTERNAL_SERVER_ERROR`  | 500         | Server error                      |
 
 ---
 
 ## Permission Matrix
 
 ### Customer Permissions
+
 - `PRODUCT_READ`
 - `SHOP_READ`
 - `ORDER_READ`
@@ -2132,6 +2231,7 @@ Get list of featured products.
 - `REVIEW_READ`
 
 ### Seller Permissions
+
 - All Customer permissions
 - `PRODUCT_WRITE`
 - `PRODUCT_DELETE`
@@ -2139,6 +2239,7 @@ Get list of featured products.
 - `PAYMENT_READ`
 
 ### Admin Permissions
+
 - All permissions
 
 ---
@@ -2146,11 +2247,13 @@ Get list of featured products.
 ## Rate Limiting
 
 All endpoints are rate-limited:
+
 - **Default**: 100 requests per minute per IP
 - **Auth endpoints**: 10 requests per minute per IP
 - **Payment endpoints**: 20 requests per minute per user
 
 **Rate Limit Headers:**
+
 ```
 X-RateLimit-Limit: 100
 X-RateLimit-Remaining: 95
@@ -2170,6 +2273,7 @@ GET /health
 ```
 
 **Response:**
+
 ```json
 {
   "status": "ok",

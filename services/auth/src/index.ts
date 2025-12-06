@@ -41,8 +41,8 @@ const buildServer = async () => {
   });
 
   // Register routes
-  await server.register(authRoutes, { prefix: '/auth' });
-  await server.register(oauthRoutes, { prefix: '/oauth' });
+  await server.register(authRoutes, { prefix: '/api/auth' });
+  await server.register(oauthRoutes, { prefix: '/api/oauth' });
 
   // Error handlers
   server.setErrorHandler(errorHandler);

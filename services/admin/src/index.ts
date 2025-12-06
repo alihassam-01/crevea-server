@@ -28,7 +28,7 @@ const buildServer = async () => {
     timestamp: new Date().toISOString(),
   }));
 
-  await server.register(adminRoutes, { prefix: '/admin' });
+  await server.register(adminRoutes, { prefix: '/api/admin' });
 
   server.setErrorHandler(errorHandler);
   server.setNotFoundHandler(notFoundHandler);

@@ -33,8 +33,8 @@ const buildServer = async () => {
     timestamp: new Date().toISOString(),
   }));
 
-  await server.register(paymentRoutes, { prefix: '/payments' });
-  await server.register(walletRoutes, { prefix: '/wallet' });
+  await server.register(paymentRoutes, { prefix: '/api/payments' });
+  await server.register(walletRoutes, { prefix: '/api/wallet' });
 
   server.setErrorHandler(errorHandler);
   server.setNotFoundHandler(notFoundHandler);

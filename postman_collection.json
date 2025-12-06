@@ -87,7 +87,7 @@
                         "header": [],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"Test123!\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"role\": \"CUSTOMER\"\n}",
+                            "raw": "{\n  \"email\": \"ali.hassam1@gmail.com\",\n  \"password\": \"Hello@1234\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"role\": \"CUSTOMER\"\n}",
                             "options": {
                                 "raw": {
                                     "language": "json"
@@ -95,11 +95,12 @@
                             }
                         },
                         "url": {
-                            "raw": "{{auth_base_url}}/auth/register",
+                            "raw": "{{auth_base_url}}/api/auth/register",
                             "host": [
                                 "{{auth_base_url}}"
                             ],
                             "path": [
+                                "api",
                                 "auth",
                                 "register"
                             ]
@@ -127,7 +128,7 @@
                         "header": [],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"Test123!\"\n}",
+                            "raw": "{\n  \"email\": \"ali.hassam1@gmail.com\",\n  \"password\": \"Hello@1234\"\n}",
                             "options": {
                                 "raw": {
                                     "language": "json"
@@ -135,11 +136,12 @@
                             }
                         },
                         "url": {
-                            "raw": "{{auth_base_url}}/auth/login",
+                            "raw": "{{auth_base_url}}/api/auth/login",
                             "host": [
                                 "{{auth_base_url}}"
                             ],
                             "path": [
+                                "api",
                                 "auth",
                                 "login"
                             ]
@@ -162,11 +164,12 @@
                         "method": "GET",
                         "header": [],
                         "url": {
-                            "raw": "{{auth_base_url}}/auth/me",
+                            "raw": "{{auth_base_url}}/api/auth/me",
                             "host": [
                                 "{{auth_base_url}}"
                             ],
                             "path": [
+                                "api",
                                 "auth",
                                 "me"
                             ]
@@ -202,11 +205,12 @@
                             }
                         },
                         "url": {
-                            "raw": "{{auth_base_url}}/auth/refresh",
+                            "raw": "{{auth_base_url}}/api/auth/refresh",
                             "host": [
                                 "{{auth_base_url}}"
                             ],
                             "path": [
+                                "api",
                                 "auth",
                                 "refresh"
                             ]
@@ -229,11 +233,12 @@
                         "method": "POST",
                         "header": [],
                         "url": {
-                            "raw": "{{auth_base_url}}/auth/logout",
+                            "raw": "{{auth_base_url}}/api/auth/logout",
                             "host": [
                                 "{{auth_base_url}}"
                             ],
                             "path": [
+                                "api",
                                 "auth",
                                 "logout"
                             ]
@@ -247,7 +252,7 @@
                         "header": [],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"email\": \"test@example.com\"\n}",
+                            "raw": "{\n  \"email\": \"ali.hassam1@gmail.com\"\n}",
                             "options": {
                                 "raw": {
                                     "language": "json"
@@ -255,11 +260,12 @@
                             }
                         },
                         "url": {
-                            "raw": "{{auth_base_url}}/auth/forgot-password",
+                            "raw": "{{auth_base_url}}/api/auth/forgot-password",
                             "host": [
                                 "{{auth_base_url}}"
                             ],
                             "path": [
+                                "api",
                                 "auth",
                                 "forgot-password"
                             ]
@@ -296,12 +302,13 @@
                             }
                         },
                         "url": {
-                            "raw": "{{shop_base_url}}/shop",
+                            "raw": "{{shop_base_url}}/api/shops",
                             "host": [
                                 "{{shop_base_url}}"
                             ],
                             "path": [
-                                "shop"
+                                "api",
+                                "shops"
                             ]
                         }
                     }
@@ -312,12 +319,13 @@
                         "method": "GET",
                         "header": [],
                         "url": {
-                            "raw": "{{shop_base_url}}/shop?page=1&limit=20",
+                            "raw": "{{shop_base_url}}/api/shops?page=1&limit=20",
                             "host": [
                                 "{{shop_base_url}}"
                             ],
                             "path": [
-                                "shop"
+                                "api",
+                                "shops"
                             ],
                             "query": [
                                 {
@@ -338,12 +346,13 @@
                         "method": "GET",
                         "header": [],
                         "url": {
-                            "raw": "{{shop_base_url}}/shop/:id",
+                            "raw": "{{shop_base_url}}/api/shops/:id",
                             "host": [
                                 "{{shop_base_url}}"
                             ],
                             "path": [
-                                "shop",
+                                "api",
+                                "shops",
                                 ":id"
                             ],
                             "variable": [
@@ -371,12 +380,13 @@
                         "method": "GET",
                         "header": [],
                         "url": {
-                            "raw": "{{shop_base_url}}/shop/seller/my-shops",
+                            "raw": "{{shop_base_url}}/api/shops/seller/my-shops",
                             "host": [
                                 "{{shop_base_url}}"
                             ],
                             "path": [
-                                "shop",
+                                "api",
+                                "shops",
                                 "seller",
                                 "my-shops"
                             ]
@@ -413,12 +423,13 @@
                             }
                         },
                         "url": {
-                            "raw": "{{product_base_url}}/product",
+                            "raw": "{{product_base_url}}/api/products",
                             "host": [
                                 "{{product_base_url}}"
                             ],
                             "path": [
-                                "product"
+                                "api",
+                                "products"
                             ]
                         }
                     }
@@ -429,12 +440,13 @@
                         "method": "GET",
                         "header": [],
                         "url": {
-                            "raw": "{{product_base_url}}/product?page=1&limit=20",
+                            "raw": "{{product_base_url}}/api/products?page=1&limit=20",
                             "host": [
                                 "{{product_base_url}}"
                             ],
                             "path": [
-                                "product"
+                                "api",
+                                "products"
                             ],
                             "query": [
                                 {
@@ -465,12 +477,13 @@
                         "method": "GET",
                         "header": [],
                         "url": {
-                            "raw": "{{product_base_url}}/product/:id",
+                            "raw": "{{product_base_url}}/api/products/:id",
                             "host": [
                                 "{{product_base_url}}"
                             ],
                             "path": [
-                                "product",
+                                "api",
+                                "products",
                                 ":id"
                             ],
                             "variable": [
@@ -488,12 +501,13 @@
                         "method": "GET",
                         "header": [],
                         "url": {
-                            "raw": "{{product_base_url}}/product/shop/:shopId",
+                            "raw": "{{product_base_url}}/api/products/shop/:shopId",
                             "host": [
                                 "{{product_base_url}}"
                             ],
                             "path": [
-                                "product",
+                                "api",
+                                "products",
                                 "shop",
                                 ":shopId"
                             ],
@@ -527,11 +541,12 @@
                         "method": "GET",
                         "header": [],
                         "url": {
-                            "raw": "{{order_base_url}}/cart",
+                            "raw": "{{order_base_url}}/api/cart",
                             "host": [
                                 "{{order_base_url}}"
                             ],
                             "path": [
+                                "api",
                                 "cart"
                             ]
                         }
@@ -562,11 +577,12 @@
                             }
                         },
                         "url": {
-                            "raw": "{{order_base_url}}/cart/items",
+                            "raw": "{{order_base_url}}/api/cart/items",
                             "host": [
                                 "{{order_base_url}}"
                             ],
                             "path": [
+                                "api",
                                 "cart",
                                 "items"
                             ]
@@ -598,11 +614,12 @@
                             }
                         },
                         "url": {
-                            "raw": "{{order_base_url}}/cart/items/:productId",
+                            "raw": "{{order_base_url}}/api/cart/items/:productId",
                             "host": [
                                 "{{order_base_url}}"
                             ],
                             "path": [
+                                "api",
                                 "cart",
                                 "items",
                                 ":productId"
@@ -632,11 +649,12 @@
                         "method": "DELETE",
                         "header": [],
                         "url": {
-                            "raw": "{{order_base_url}}/cart/items/:productId",
+                            "raw": "{{order_base_url}}/api/cart/items/:productId",
                             "host": [
                                 "{{order_base_url}}"
                             ],
                             "path": [
+                                "api",
                                 "cart",
                                 "items",
                                 ":productId"
@@ -680,12 +698,13 @@
                             }
                         },
                         "url": {
-                            "raw": "{{order_base_url}}/order",
+                            "raw": "{{order_base_url}}/api/orders",
                             "host": [
                                 "{{order_base_url}}"
                             ],
                             "path": [
-                                "order"
+                                "api",
+                                "orders"
                             ]
                         }
                     }
@@ -706,12 +725,13 @@
                         "method": "GET",
                         "header": [],
                         "url": {
-                            "raw": "{{order_base_url}}/order?page=1&limit=20",
+                            "raw": "{{order_base_url}}/api/orders?page=1&limit=20",
                             "host": [
                                 "{{order_base_url}}"
                             ],
                             "path": [
-                                "order"
+                                "api",
+                                "orders"
                             ],
                             "query": [
                                 {
@@ -742,12 +762,13 @@
                         "method": "GET",
                         "header": [],
                         "url": {
-                            "raw": "{{order_base_url}}/order/:id",
+                            "raw": "{{order_base_url}}/api/orders/:id",
                             "host": [
                                 "{{order_base_url}}"
                             ],
                             "path": [
-                                "order",
+                                "api",
+                                "orders",
                                 ":id"
                             ],
                             "variable": [
@@ -775,12 +796,13 @@
                         "method": "GET",
                         "header": [],
                         "url": {
-                            "raw": "{{order_base_url}}/order/:id/tracking",
+                            "raw": "{{order_base_url}}/api/orders/:id/tracking",
                             "host": [
                                 "{{order_base_url}}"
                             ],
                             "path": [
-                                "order",
+                                "api",
+                                "orders",
                                 ":id",
                                 "tracking"
                             ],
@@ -823,12 +845,13 @@
                             }
                         },
                         "url": {
-                            "raw": "{{review_base_url}}/review",
+                            "raw": "{{review_base_url}}/api/reviews",
                             "host": [
                                 "{{review_base_url}}"
                             ],
                             "path": [
-                                "review"
+                                "api",
+                                "reviews"
                             ]
                         }
                     }
@@ -839,12 +862,13 @@
                         "method": "GET",
                         "header": [],
                         "url": {
-                            "raw": "{{review_base_url}}/review/target/:targetId?page=1&limit=20",
+                            "raw": "{{review_base_url}}/api/reviews/target/:targetId?page=1&limit=20",
                             "host": [
                                 "{{review_base_url}}"
                             ],
                             "path": [
-                                "review",
+                                "api",
+                                "reviews",
                                 "target",
                                 ":targetId"
                             ],
@@ -888,12 +912,13 @@
                         "method": "GET",
                         "header": [],
                         "url": {
-                            "raw": "{{notification_base_url}}/notification?page=1&limit=20",
+                            "raw": "{{notification_base_url}}/api/notifications?page=1&limit=20",
                             "host": [
                                 "{{notification_base_url}}"
                             ],
                             "path": [
-                                "notification"
+                                "api",
+                                "notifications"
                             ],
                             "query": [
                                 {
@@ -929,12 +954,13 @@
                         "method": "PUT",
                         "header": [],
                         "url": {
-                            "raw": "{{notification_base_url}}/notification/:id/read",
+                            "raw": "{{notification_base_url}}/api/notifications/:id/read",
                             "host": [
                                 "{{notification_base_url}}"
                             ],
                             "path": [
-                                "notification",
+                                "api",
+                                "notifications",
                                 ":id",
                                 "read"
                             ],

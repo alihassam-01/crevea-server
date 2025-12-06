@@ -34,7 +34,7 @@ const buildServer = async () => {
     timestamp: new Date().toISOString(),
   }));
 
-  await server.register(notificationRoutes, { prefix: '/notifications' });
+  await server.register(notificationRoutes, { prefix: '/api/notifications' });
 
   server.setErrorHandler(errorHandler);
   server.setNotFoundHandler(notFoundHandler);
