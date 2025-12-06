@@ -32,7 +32,9 @@ export default async function productRoutes(server: FastifyInstance) {
     preHandler: [authenticate, requirePermission(Permission.PRODUCT_WRITE)]
   }, async (request, reply) => {
     const data = validate(createProductSchema, request.body);
-    const result = await productController.createProduct(request.user!.userId, data);
+    // Forward authorization header so controller can call Shop service if needed
+    const authHeader = request.headers.authorization as string | undefined;
+    const result = await productController.createProduct(request.user!.userId, data, authHeader);
     return reply.status(201).send(result);
   });
 

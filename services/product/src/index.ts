@@ -28,7 +28,7 @@ const buildServer = async () => {
     timestamp: new Date().toISOString(),
   }));
 
-  await server.register(productRoutes, { prefix: '/products' });
+  await server.register(productRoutes, { prefix: '/api/products' });
 
   server.setErrorHandler(errorHandler);
   server.setNotFoundHandler(notFoundHandler);

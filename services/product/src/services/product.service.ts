@@ -6,10 +6,40 @@ import { v4 as uuidv4 } from 'uuid';
 import { sanitizeHtml, sanitizeText } from '@crevea/shared';
 import { Like } from 'typeorm';
 
+// Simple slugify utility: lowercases, removes diacritics, non-alphanumerics -> hyphens
+const slugify = (text: string): string => {
+  return text
+    .toString()
+    .normalize('NFKD')
+    .replace(/\p{Diacritic}/gu, '')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+};
+
+const generateUniqueSlug = async (productRepo: any, name: string): Promise<string> => {
+  const base = slugify(name || 'product');
+  let slug = base;
+  let attempt = 0;
+
+  // Check for existing slug and append a counter until unique
+  // Limit attempts to avoid infinite loops
+  while (attempt < 100) {
+    const existing = await productRepo.findOne({ where: { slug } });
+    if (!existing) return slug;
+    attempt += 1;
+    slug = `${base}-${attempt}`;
+  }
+
+  // Fallback to a UUID-based slug
+  return `${base}-${uuidv4().slice(0, 8)}`;
+};
+
 interface CreateProductData {
   shopId: string;
   name: string;
-  slug: string;
+  slug?: string;
   description?: string;
   shortDescription?: string;
   type: ProductType;
@@ -36,7 +66,7 @@ export const create = async (data: CreateProductData): Promise<IProduct> => {
   const product = productRepo.create({
     shopId: data.shopId,
     name: sanitizedName,
-    slug: data.slug,
+    slug: data.slug || await generateUniqueSlug(productRepo, sanitizedName),
     description: sanitizedDescription,
     shortDescription: sanitizedShortDescription,
     type: data.type,

@@ -1,10 +1,10 @@
-import { successResponse, NotFoundError, AuthorizationError } from '@crevea/shared';
+import { successResponse, NotFoundError, AuthorizationError, ExternalServiceError } from '@crevea/shared';
 import * as productService from '../services/product.service';
 import * as inventoryService from '../services/inventory.service';
 
-export const createProduct = async (userId: string, data: any) => {
-  // Verify user owns the shop
-  const shopId = data.shopId || await getShopIdForUser(userId);
+export const createProduct = async (userId: string, data: any, authHeader?: string) => {
+  // Verify user owns the shop. If `shopId` not provided, resolve via Shop service.
+  const shopId = data.shopId || await getShopIdForUser(userId, authHeader);
   const product = await productService.create({ ...data, shopId });
   return successResponse(product);
 };
@@ -106,10 +106,41 @@ export const addVariation = async (id: string, userId: string, data: any) => {
 };
 
 // Helper functions
-const getShopIdForUser = async (_userId: string): Promise<string> => {
-  // This would query the shop service to get the user's shop
-  // For now, returning a placeholder
-  throw new Error('Shop ID must be provided');
+const getShopIdForUser = async (userId: string, authHeader?: string): Promise<string> => {
+  const SHOP_SERVICE_URL = process.env.SHOP_SERVICE_URL || 'http://localhost:3002';
+
+  try {
+    const res = await fetch(`${SHOP_SERVICE_URL}/api/shops/seller/my-shops`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(authHeader ? { Authorization: authHeader } : {}),
+      },
+    });
+
+    if (!res.ok) {
+      // If unauthorized, bubble up a clear error
+      if (res.status === 401) {
+        throw new ExternalServiceError('Shop Service', 'Unauthorized when fetching seller shops');
+      }
+      throw new ExternalServiceError('Shop Service', `Failed to fetch seller shops. Status: ${res.status}`);
+    }
+
+    const body = await res.json();
+    // Expecting shared `successResponse` shape: { success: true, data: [...] }
+    const shops = body && body.data ? body.data : [];
+
+    if (!Array.isArray(shops) || shops.length === 0) {
+      throw new NotFoundError('Shop');
+    }
+
+    // If user has multiple shops, choose first. For multi-shop flows, frontend should provide `shopId`.
+    return shops[0].id;
+  } catch (error: any) {
+    if (error instanceof NotFoundError) throw error;
+    if (error instanceof ExternalServiceError) throw error;
+    throw new ExternalServiceError('Shop Service', error?.message || 'Unknown error');
+  }
 };
 
 const verifyProductAccess = async (_shopId: string, _userId: string): Promise<boolean> => {
