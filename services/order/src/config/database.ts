@@ -3,6 +3,9 @@ import { DataSource } from 'typeorm';
 import { createLogger } from '@crevea/shared';
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Index } from 'typeorm';
 import { OrderStatus } from '@crevea/shared';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const logger = createLogger('database');
 

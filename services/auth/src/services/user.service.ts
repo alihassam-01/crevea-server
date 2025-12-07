@@ -68,6 +68,10 @@ export const verifyPassword = async (userId: string, password: string): Promise<
 
 export const updateUser = async (id: string, data: Partial<User>): Promise<IUser> => {
   const userRepo = getUserRepository();
+  
+  if (data.email) {
+    data.email = sanitizeEmail(data.email);
+  }
 
   await userRepo.update(id, {
     ...data,
@@ -140,7 +144,7 @@ export const createOAuthAccount = async (data: {
     userId: data.userId,
     provider: data.provider,
     providerId: data.providerId,
-    email: data.email,
+    email: sanitizeEmail(data.email),
     profile: {},
   });
   await oauthRepo.save(oauthAccount);

@@ -7,6 +7,24 @@ export const getCart = async (userId: string) => {
 };
 
 export const addItem = async (userId: string, item: any) => {
+  if (!item.shopId) {
+    const PRODUCT_SERVICE_URL = process.env.PRODUCT_SERVICE_URL || 'http://localhost:3003';
+    try {
+      const response = await fetch(`${PRODUCT_SERVICE_URL}/api/products/${item.productId}`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch product details: ${response.statusText}`);
+      }
+      const productResponse = await response.json();
+      if (productResponse.success && productResponse.data) {
+         item.shopId = productResponse.data.shopId;
+      } else {
+         throw new Error('Invalid product response');
+      }
+    } catch (error: any) {
+      throw new Error(`Could not retrieve shop information for product: ${error.message}`);
+    }
+  }
+
   const cart = await cartService.addItem(userId, item);
   return successResponse(cart);
 };

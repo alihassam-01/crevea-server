@@ -3,9 +3,9 @@ import { z } from 'zod';
 import { validate, authenticate } from '@crevea/shared';
 import * as cartController from '../controllers/cart.controller';
 
-const addItemSchema = z.object({
+export const addItemSchema = z.object({
   productId: z.string().uuid(),
-  shopId: z.string().uuid(),
+  shopId: z.string().uuid().optional(),
   variationId: z.string().uuid().optional(),
   quantity: z.number().int().positive(),
   price: z.number().positive(),

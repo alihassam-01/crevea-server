@@ -71,8 +71,8 @@ export const create = async (data: CreateProductData): Promise<IProduct> => {
     shortDescription: sanitizedShortDescription,
     type: data.type,
     status: ProductStatus.DRAFT,
-    category: data.category,
-    tags: data.tags || [],
+    category: data.category.toUpperCase(),
+    tags: (data.tags || []).map(t => t.toLowerCase()),
     images: data.images || [],
     price: data.price,
     compareAtPrice: data.compareAtPrice,
@@ -221,6 +221,8 @@ export const updateProduct = async (id: string, data: Partial<Product>): Promise
   if (updateData.name) updateData.name = sanitizeText(updateData.name);
   if (updateData.description) updateData.description = sanitizeHtml(updateData.description);
   if (updateData.shortDescription) updateData.shortDescription = sanitizeText(updateData.shortDescription);
+  if (updateData.category) updateData.category = updateData.category.toUpperCase();
+  if (updateData.tags) updateData.tags = updateData.tags.map((t: string) => t.toLowerCase());
 
   await productRepo.update(id, updateData);
 

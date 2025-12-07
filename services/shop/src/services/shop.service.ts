@@ -3,7 +3,7 @@ import { ShopCategory, ShopStatus, VerificationStatus, IShop } from '@crevea/sha
 import { publishEvent } from '../config/kafka';
 import { EventType, IEvent } from '@crevea/shared';
 import { v4 as uuidv4 } from 'uuid';
-import { sanitizeHtml, sanitizeText, slugify } from '@crevea/shared';
+import { sanitizeHtml, sanitizeText, slugify, sanitizeEmail } from '@crevea/shared';
 import { Like } from 'typeorm';
 
 interface CreateShopData {
@@ -51,7 +51,7 @@ export const create = async (data: CreateShopData): Promise<IShop> => {
     verificationStatus: VerificationStatus.PENDING,
     address: data.address,
     phone: data.phone,
-    email: data.email,
+    email: data.email ? sanitizeEmail(data.email) : undefined,
     socialLinks: data.socialLinks,
     commissionRate: 10,
     rating: 0,
@@ -142,6 +142,7 @@ export const updateShop = async (id: string, data: Partial<Shop>): Promise<IShop
   const updateData: any = { ...data };
   if (updateData.name) updateData.name = sanitizeText(updateData.name);
   if (updateData.description) updateData.description = sanitizeHtml(updateData.description);
+  if (updateData.email) updateData.email = sanitizeEmail(updateData.email);
 
   await shopRepo.update(id, updateData);
 
