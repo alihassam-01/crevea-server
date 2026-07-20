@@ -5,9 +5,12 @@ import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import { createLogger, errorHandler, notFoundHandler } from '@crevea/shared';
 import shopRoutes from './routes/shop.routes';
+import sizeChartRoutes from './routes/size-chart.routes';
+import sellerRoutes from './routes/seller.routes';
+import adminShopRoutes from './routes/admin-shop.routes';
 import { initDatabase } from './config/database';
 import { initRedis } from './config/redis';
-import { initKafka } from './config/kafka';
+import { getEventBus } from '@crevea/shared';
 
 const logger = createLogger('shop-service');
 const PORT = parseInt(process.env.PORT || '3002', 10);
@@ -32,6 +35,9 @@ const buildServer = async () => {
   });
 
   await server.register(shopRoutes, { prefix: '/api/shops' });
+  await server.register(sizeChartRoutes, { prefix: '/api/shops' });
+  await server.register(sellerRoutes, { prefix: '/api/shops' });
+  await server.register(adminShopRoutes, { prefix: '/api/admin' });
   server.setErrorHandler(errorHandler);
   server.setNotFoundHandler(notFoundHandler);
 
@@ -46,8 +52,9 @@ const start = async () => {
     await initRedis();
     logger.info('Redis connected');
 
-    await initKafka();
-    logger.info('Kafka connected');
+    // Initialize Event Bus (Redis/Kafka)
+    await getEventBus().connect();
+    logger.info('Event Bus connected');
 
     const server = await buildServer();
     await server.listen({ port: PORT, host: '0.0.0.0' });

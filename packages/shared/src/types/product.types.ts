@@ -42,6 +42,7 @@ export interface IProduct {
   totalReviews: number;
   totalSales: number;
   isFeatured: boolean;
+  sizeChartId?: string;
   createdAt: Date;
   updatedAt: Date;
 }

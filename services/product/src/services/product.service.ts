@@ -1,6 +1,5 @@
 import { getProductRepository, getProductVariationRepository, Product } from '../config/database';
-import { ProductStatus, ProductType, IProduct } from '@crevea/shared';
-import { publishEvent } from '../config/kafka';
+import { ProductStatus, ProductType, IProduct, getEventBus } from '@crevea/shared';
 import { EventType, IEvent } from '@crevea/shared';
 import { v4 as uuidv4 } from 'uuid';
 import { sanitizeHtml, sanitizeText } from '@crevea/shared';
@@ -52,6 +51,7 @@ interface CreateProductData {
   weight?: number;
   dimensions?: any;
   attributes?: any;
+  sizeChartId?: string;
 }
 
 export const create = async (data: CreateProductData): Promise<IProduct> => {
@@ -85,6 +85,7 @@ export const create = async (data: CreateProductData): Promise<IProduct> => {
     totalReviews: 0,
     totalSales: 0,
     isFeatured: false,
+    sizeChartId: data.sizeChartId,
   });
 
   await productRepo.save(product);
@@ -100,7 +101,7 @@ export const create = async (data: CreateProductData): Promise<IProduct> => {
       name: sanitizedName,
     },
   };
-  await publishEvent(event);
+  await getEventBus().publish(event);
 
   return mapProductToInterface(product);
 };
@@ -236,7 +237,7 @@ export const updateProduct = async (id: string, data: Partial<Product>): Promise
     timestamp: new Date(),
     payload: { productId: id },
   };
-  await publishEvent(event);
+  await getEventBus().publish(event);
 
   return mapProductToInterface(product);
 };
@@ -252,7 +253,7 @@ export const deleteProduct = async (id: string): Promise<void> => {
     timestamp: new Date(),
     payload: { productId: id },
   };
-  await publishEvent(event);
+  await getEventBus().publish(event);
 };
 
 const mapProductToInterface = (product: Product): IProduct => {
@@ -279,6 +280,7 @@ const mapProductToInterface = (product: Product): IProduct => {
     totalReviews: product.totalReviews,
     totalSales: product.totalSales,
     isFeatured: product.isFeatured,
+    sizeChartId: product.sizeChartId,
     createdAt: product.createdAt,
     updatedAt: product.updatedAt,
   };

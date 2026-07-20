@@ -1,16 +1,16 @@
 import 'reflect-metadata';
+import 'dotenv/config';
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
-import dotenv from 'dotenv';
 import { createLogger, errorHandler, notFoundHandler } from '@crevea/shared';
 import orderRoutes from './routes/order.routes';
 import cartRoutes from './routes/cart.routes';
 import { initDatabase } from './config/database';
 import { initRedis } from './config/redis';
-import { initKafka } from './config/kafka';
+import { getEventBus } from '@crevea/shared';
 
-dotenv.config();
+
 
 const logger = createLogger('order-service');
 const PORT = parseInt(process.env.PORT || '3004', 10);
@@ -48,8 +48,9 @@ const start = async () => {
     await initRedis();
     logger.info('Redis connected');
 
-    await initKafka();
-    logger.info('Kafka connected');
+    // Initialize Event Bus (Redis/Kafka)
+    await getEventBus().connect();
+    logger.info('Event Bus connected');
 
     const server = await buildServer();
     await server.listen({ port: PORT, host: '0.0.0.0' });

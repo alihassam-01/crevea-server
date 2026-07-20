@@ -1,11 +1,11 @@
+import 'dotenv/config';
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
-import dotenv from 'dotenv';
 import { createLogger, errorHandler, notFoundHandler } from '@crevea/shared';
 import promotionRoutes from './routes/promotion.routes';
 
-dotenv.config();
+
 
 const logger = createLogger('promotion-service');
 const PORT = parseInt(process.env.PORT || '3010', 10);

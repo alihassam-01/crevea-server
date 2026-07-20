@@ -1,6 +1,5 @@
 import { getShopRepository, Shop } from '../config/database';
-import { ShopCategory, ShopStatus, VerificationStatus, IShop } from '@crevea/shared';
-import { publishEvent } from '../config/kafka';
+import { ShopCategory, ShopStatus, VerificationStatus, IShop, getEventBus } from '@crevea/shared';
 import { EventType, IEvent } from '@crevea/shared';
 import { v4 as uuidv4 } from 'uuid';
 import { sanitizeHtml, sanitizeText, slugify, sanitizeEmail } from '@crevea/shared';
@@ -72,7 +71,7 @@ export const create = async (data: CreateShopData): Promise<IShop> => {
       name: sanitizedName,
     },
   };
-  await publishEvent(event);
+  await getEventBus().publish(event);
 
   return mapShopToInterface(shop);
 };
@@ -156,7 +155,7 @@ export const updateShop = async (id: string, data: Partial<Shop>): Promise<IShop
     timestamp: new Date(),
     payload: { shopId: id },
   };
-  await publishEvent(event);
+  await getEventBus().publish(event);
 
   return mapShopToInterface(shop);
 };
@@ -183,7 +182,7 @@ export const updateVerificationStatus = async (
     timestamp: new Date(),
     payload: { shopId: id, sellerId: shop.sellerId },
   };
-  await publishEvent(event);
+  await getEventBus().publish(event);
 
   return mapShopToInterface(shop);
 };
@@ -199,7 +198,7 @@ export const deleteShop = async (id: string): Promise<void> => {
     timestamp: new Date(),
     payload: { shopId: id },
   };
-  await publishEvent(event);
+  await getEventBus().publish(event);
 };
 
 const mapShopToInterface = (shop: Shop): IShop => {

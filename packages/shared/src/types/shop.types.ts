@@ -109,3 +109,66 @@ export interface IRevenueByDay {
   revenue: number;
   orders: number;
 }
+
+/**
+ * Size Chart interface
+ */
+export interface ISizeChart {
+  id: string;
+  shopId: string;
+  name: string;
+  imageUrl: string;
+  category?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * Seller Earnings interface
+ */
+export interface ISellerEarnings {
+  id: string;
+  shopId: string;
+  orderId: string;
+  grossAmount: number;
+  commissionRate: number;
+  commissionAmount: number;
+  netAmount: number;
+  status: 'PENDING' | 'COMPLETED' | 'REFUNDED';
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * Payout interface
+ */
+export interface IShopPayout {
+  id: string;
+  shopId: string;
+  requestedAmount: number;
+  approvedAmount?: number;
+  status: 'PENDING' | 'APPROVED' | 'PROCESSING' | 'COMPLETED' | 'REJECTED';
+  requestedAt: Date;
+  approvedAt?: Date;
+  completedAt?: Date;
+  approvedBy?: string;
+  paymentMethod: string;
+  paymentDetails: any;
+  notes?: string;
+  rejectionReason?: string;
+  updatedAt: Date;
+}
+
+/**
+ * Seller Balance interface
+ */
+export interface ISellerBalance {
+  totalEarnings: number;
+  totalCommission: number;
+  netEarnings: number;
+  pendingBalance: number;
+  payoutsCompleted: number;
+  payoutsPending: number;
+}
+
+

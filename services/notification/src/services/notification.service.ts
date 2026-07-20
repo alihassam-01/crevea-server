@@ -1,7 +1,6 @@
 import { getNotificationRepository } from '../config/database';
 import { Notification } from '../config/database';
-import { INotification, NotificationType } from '@crevea/shared';
-import { publishEvent } from '../config/kafka';
+import { INotification, NotificationType, getEventBus } from '@crevea/shared';
 import { EventType, IEvent } from '@crevea/shared';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -41,7 +40,7 @@ export const create = async (data: CreateNotificationData): Promise<INotificatio
       data: data.data,
     },
   };
-  await publishEvent(event);
+  await getEventBus().publish(event);
 
   return mapNotificationToInterface(notification);
 };

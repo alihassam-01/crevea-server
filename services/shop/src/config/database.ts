@@ -88,12 +88,120 @@ export class Shop {
   updatedAt!: Date;
 }
 
+@Entity('size_charts')
+export class SizeChart {
+  @PrimaryGeneratedColumn('uuid')
+  id!: string;
+
+  @Column({ type: 'varchar' })
+  @Index()
+  shopId!: string;
+
+  @Column({ type: 'varchar' })
+  name!: string;
+
+  @Column({ type: 'varchar' })
+  imageUrl!: string;
+
+  @Column({ type: 'varchar', nullable: true })
+  category?: string;
+
+  @CreateDateColumn()
+  createdAt!: Date;
+
+  @UpdateDateColumn()
+  updatedAt!: Date;
+}
+
+@Entity('seller_earnings')
+export class SellerEarnings {
+  @PrimaryGeneratedColumn('uuid')
+  id!: string;
+
+  @Column({ type: 'varchar' })
+  @Index()
+  shopId!: string;
+
+  @Column({ type: 'varchar' })
+  @Index()
+  orderId!: string;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  grossAmount!: number;
+
+  @Column({ type: 'decimal', precision: 5, scale: 2 })
+  commissionRate!: number;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  commissionAmount!: number;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  netAmount!: number;
+
+  @Column({ type: 'varchar', default: 'COMPLETED' })
+  @Index()
+  status!: string; // PENDING | COMPLETED | REFUNDED
+
+  @CreateDateColumn()
+  createdAt!: Date;
+
+  @UpdateDateColumn()
+  updatedAt!: Date;
+}
+
+@Entity('payouts')
+export class Payout {
+  @PrimaryGeneratedColumn('uuid')
+  id!: string;
+
+  @Column({ type: 'varchar' })
+  @Index()
+  shopId!: string;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  requestedAmount!: number;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  approvedAmount?: number;
+
+  @Column({ type: 'varchar', default: 'PENDING' })
+  @Index()
+  status!: string; // PENDING | APPROVED | PROCESSING | COMPLETED | REJECTED
+
+  @Column({ type: 'varchar' })
+  paymentMethod!: string;
+
+  @Column({ type: 'jsonb' })
+  paymentDetails!: Record<string, any>;
+
+  @CreateDateColumn()
+  requestedAt!: Date;
+
+  @Column({ type: 'timestamp', nullable: true })
+  approvedAt?: Date;
+
+  @Column({ type: 'timestamp', nullable: true })
+  completedAt?: Date;
+
+  @Column({ type: 'varchar', nullable: true })
+  approvedBy?: string;
+
+  @Column({ type: 'text', nullable: true })
+  notes?: string;
+
+  @Column({ type: 'text', nullable: true })
+  rejectionReason?: string;
+
+  @UpdateDateColumn()
+  updatedAt!: Date;
+}
+
 export const AppDataSource = new DataSource({
   type: 'postgres',
   url: process.env.SHOP_DATABASE_URL || process.env.DATABASE_URL,
   synchronize: process.env.NODE_ENV === 'development',
   logging: process.env.NODE_ENV === 'development',
-  entities: [Shop],
+  entities: [Shop, SizeChart, SellerEarnings, Payout],
   subscribers: [],
   migrations: [],
   maxQueryExecutionTime: 1000,
@@ -117,6 +225,9 @@ export const closeDatabase = async (): Promise<void> => {
 };
 
 export const getShopRepository = () => AppDataSource.getRepository(Shop);
+export const getSizeChartRepository = () => AppDataSource.getRepository(SizeChart);
+export const getSellerEarningsRepository = () => AppDataSource.getRepository(SellerEarnings);
+export const getPayoutRepository = () =>AppDataSource.getRepository(Payout);
 
 export const getPool = () => {
   if (!AppDataSource.isInitialized) {
