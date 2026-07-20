@@ -1,18 +1,18 @@
 import 'reflect-metadata';
+import 'dotenv/config';
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import websocket from '@fastify/websocket';
-import dotenv from 'dotenv';
 import { createLogger, errorHandler, notFoundHandler } from '@crevea/shared';
 import notificationRoutes from './routes/notification.routes';
 import { initDatabase } from './config/database';
 import { initRedis } from './config/redis';
-import { initKafka, subscribeToEvents } from './config/kafka';
+import { getEventBus } from '@crevea/shared';
 import { EventType } from '@crevea/shared';
 import { handleAllEvents } from './handlers/event.handler';
 
-dotenv.config();
+
 
 const logger = createLogger('notification-service');
 const PORT = parseInt(process.env.PORT || '3006', 10);
@@ -50,11 +50,12 @@ const start = async () => {
     await initRedis();
     logger.info('Redis connected');
 
-    await initKafka();
-    logger.info('Kafka connected');
+    // Initialize Event Bus (Redis/Kafka)
+    await getEventBus().connect();
+    logger.info('Event Bus connected');
 
     // Subscribe to all events for notifications
-    await subscribeToEvents([
+    await getEventBus().subscribe([
       EventType.ORDER_CREATED,
       EventType.ORDER_CONFIRMED,
       EventType.ORDER_SHIPPED,

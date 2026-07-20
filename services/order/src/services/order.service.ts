@@ -1,6 +1,5 @@
 import { getOrderRepository, getOrderItemRepository, Order } from '../config/database';
-import { OrderStatus, IOrder } from '@crevea/shared';
-import { publishEvent } from '../config/kafka';
+import { OrderStatus, IOrder, getEventBus } from '@crevea/shared';
 import { EventType, IEvent } from '@crevea/shared';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -73,15 +72,22 @@ export const createOrder = async (data: CreateOrderData): Promise<IOrder> => {
       total: data.total,
     },
   };
-  await publishEvent(event);
+  await getEventBus().publish(event);
 
-  return mapOrderToInterface(order);
+  return mapOrderToInterface(order, orderItems);
 };
 
 export const findById = async (id: string): Promise<IOrder | null> => {
   const orderRepo = getOrderRepository();
+  const orderItemRepo = getOrderItemRepository();
+  
   const order = await orderRepo.findOne({ where: { id } });
-  return order ? mapOrderToInterface(order) : null;
+  if (!order) return null;
+  
+  // Load order items
+  const items = await orderItemRepo.find({ where: { orderId: id } });
+  
+  return mapOrderToInterface(order, items);
 };
 
 export const findByCustomer = async (
@@ -89,6 +95,7 @@ export const findByCustomer = async (
   options: { page: number; limit: number }
 ): Promise<{ orders: IOrder[]; total: number }> => {
   const orderRepo = getOrderRepository();
+  const orderItemRepo = getOrderItemRepository();
   const { page, limit } = options;
   const skip = (page - 1) * limit;
 
@@ -99,19 +106,40 @@ export const findByCustomer = async (
     skip,
   });
 
+  // Load items for all orders
+  const orderIds = orders.map(o => o.id);
+  const allItems = orderIds.length > 0 
+    ? await orderItemRepo.find({ 
+        where: orderIds.map(id => ({ orderId: id }))
+      })
+    : [];
+
+  // Group items by orderId
+  const itemsByOrderId = new Map<string, any[]>();
+  allItems.forEach(item => {
+    if (!itemsByOrderId.has(item.orderId)) {
+      itemsByOrderId.set(item.orderId, []);
+    }
+    itemsByOrderId.get(item.orderId)!.push(item);
+  });
+
   return {
-    orders: orders.map(mapOrderToInterface),
+    orders: orders.map(order => mapOrderToInterface(order, itemsByOrderId.get(order.id) || [])),
     total,
   };
 };
 
 export const updateStatus = async (id: string, status: OrderStatus): Promise<IOrder> => {
   const orderRepo = getOrderRepository();
+  const orderItemRepo = getOrderItemRepository();
 
   await orderRepo.update(id, { status });
 
   const order = await orderRepo.findOne({ where: { id } });
   if (!order) throw new Error('Order not found');
+
+  // Load order items
+  const items = await orderItemRepo.find({ where: { orderId: id } });
 
   // Publish event
   const eventType = status === OrderStatus.CONFIRMED
@@ -128,21 +156,32 @@ export const updateStatus = async (id: string, status: OrderStatus): Promise<IOr
     timestamp: new Date(),
     payload: { orderId: id, status },
   };
-  await publishEvent(event);
+  await getEventBus().publish(event);
 
-  return mapOrderToInterface(order);
+  return mapOrderToInterface(order, items);
 };
 
 export const cancelOrder = async (id: string): Promise<IOrder> => {
   return updateStatus(id, OrderStatus.CANCELLED);
 };
 
-const mapOrderToInterface = (order: Order): IOrder => {
+const mapOrderToInterface = (order: Order, items: any[] = []): IOrder => {
   return {
     id: order.id,
     orderNumber: order.orderNumber,
     customerId: order.customerId,
-    items: [], // Items would be loaded separately
+    items: items.map(item => ({
+      id: item.id,
+      orderId: item.orderId,
+      productId: item.productId,
+      shopId: item.shopId,
+      productName: item.productName,
+      productImage: item.productImage,
+      quantity: item.quantity,
+      price: parseFloat(item.price.toString()),
+      subtotal: parseFloat(item.total.toString()),
+      attributes: item.variation,
+    })),
     subtotal: parseFloat(order.subtotal.toString()),
     tax: parseFloat(order.tax.toString()),
     shippingCost: parseFloat(order.shippingCost.toString()),

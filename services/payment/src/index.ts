@@ -1,18 +1,18 @@
 import 'reflect-metadata';
+import 'dotenv/config';
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
-import dotenv from 'dotenv';
 import { createLogger, errorHandler, notFoundHandler } from '@crevea/shared';
 import paymentRoutes from './routes/payment.routes';
 import walletRoutes from './routes/wallet.routes';
 import { initDatabase } from './config/database';
 import { initRedis } from './config/redis';
-import { initKafka, subscribeToEvents } from './config/kafka';
+import { getEventBus } from '@crevea/shared';
 import { EventType } from '@crevea/shared';
 import { handleOrderCreated } from './handlers/order.handler';
 
-dotenv.config();
+
 
 const logger = createLogger('payment-service');
 const PORT = parseInt(process.env.PORT || '3005', 10);
@@ -50,11 +50,12 @@ const start = async () => {
     await initRedis();
     logger.info('Redis connected');
 
-    await initKafka();
-    logger.info('Kafka connected');
+    // Initialize Event Bus (Redis/Kafka)
+    await getEventBus().connect();
+    logger.info('Event Bus connected');
 
     // Subscribe to order events
-    await subscribeToEvents([EventType.ORDER_CREATED], handleOrderCreated);
+    await getEventBus().subscribe([EventType.ORDER_CREATED], handleOrderCreated);
     logger.info('Subscribed to order events');
 
     const server = await buildServer();

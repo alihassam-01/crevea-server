@@ -1,13 +1,14 @@
+import 'dotenv/config';
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
-import dotenv from 'dotenv';
 import { createLogger, errorHandler, notFoundHandler } from '@crevea/shared';
 import adminRoutes from './routes/admin.routes';
+import payoutRoutes from './routes/payout.routes';
 import { initRedis } from './config/redis';
-import { initKafka } from './config/kafka';
+import { getEventBus } from '@crevea/shared';
 
-dotenv.config();
+
 
 const logger = createLogger('admin-service');
 const PORT = parseInt(process.env.PORT || '3009', 10);
@@ -29,6 +30,7 @@ const buildServer = async () => {
   }));
 
   await server.register(adminRoutes, { prefix: '/api/admin' });
+  await server.register(payoutRoutes, { prefix: '/api/admin' });
 
   server.setErrorHandler(errorHandler);
   server.setNotFoundHandler(notFoundHandler);
@@ -41,8 +43,9 @@ const start = async () => {
     await initRedis();
     logger.info('Redis connected');
 
-    await initKafka();
-    logger.info('Kafka connected');
+    // Initialize Event Bus (Redis/Kafka)
+    await getEventBus().connect();
+    logger.info('Event Bus connected');
 
     const server = await buildServer();
     await server.listen({ port: PORT, host: '0.0.0.0' });

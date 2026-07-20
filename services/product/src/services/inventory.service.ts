@@ -1,6 +1,5 @@
 import { getInventoryRepository, Inventory } from '../config/database';
-import { publishEvent } from '../config/kafka';
-import { EventType, IEvent } from '@crevea/shared';
+import { EventType, IEvent, getEventBus } from '@crevea/shared';
 import { v4 as uuidv4 } from 'uuid';
 
 
@@ -57,7 +56,7 @@ export const updateInventory = async (
         threshold: inventory.lowStockThreshold,
       },
     };
-    await publishEvent(event);
+    await getEventBus().publish(event);
   }
 
   // Check if out of stock
@@ -68,7 +67,7 @@ export const updateInventory = async (
       timestamp: new Date(),
       payload: { productId },
     };
-    await publishEvent(event);
+    await getEventBus().publish(event);
   }
 
   return inventory;
@@ -86,7 +85,7 @@ export const reserveStock = async (productId: string, quantity: number): Promise
   inventory.available = inventory.stock - inventory.reserved;
   inventory.updatedAt = new Date();
 
-  await inventoryRepo.save(inventory);
+  await inventoryRepo.save(inventory); 
   return true;
 };
 

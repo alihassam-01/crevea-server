@@ -1,13 +1,13 @@
+import 'dotenv/config';
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
-import dotenv from 'dotenv';
 import { createLogger, errorHandler, notFoundHandler } from '@crevea/shared';
-import { initKafka, subscribeToEvents } from './config/kafka';
+import { getEventBus } from '@crevea/shared';
 import { EventType } from '@crevea/shared';
 import { handleEmailEvents } from './handlers/email.handler';
 
-dotenv.config();
+
 
 const logger = createLogger('email-service');
 const PORT = parseInt(process.env.PORT || '3007', 10);
@@ -36,11 +36,12 @@ const buildServer = async () => {
 
 const start = async () => {
   try {
-    await initKafka();
-    logger.info('Kafka connected');
+    // Initialize Event Bus (Redis/Kafka)
+    await getEventBus().connect();
+    logger.info('Event Bus connected');
 
     // Subscribe to email events
-    await subscribeToEvents([EventType.EMAIL_SEND], handleEmailEvents);
+    await getEventBus().subscribe([EventType.EMAIL_SEND], handleEmailEvents);
     logger.info('Subscribed to email events');
 
     const server = await buildServer();

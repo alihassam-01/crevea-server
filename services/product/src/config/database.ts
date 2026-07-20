@@ -86,6 +86,9 @@ export class Product {
   @Column({ type: 'boolean', default: false })
   isFeatured!: boolean;
 
+  @Column({ type: 'varchar', nullable: true })
+  sizeChartId?: string;
+
   @CreateDateColumn()
   createdAt!: Date;
 

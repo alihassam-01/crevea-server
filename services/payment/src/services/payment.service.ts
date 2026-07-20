@@ -1,6 +1,5 @@
 import { getPaymentRepository, Payment } from '../config/database';
-import { publishEvent } from '../config/kafka';
-import { IPayment, PaymentMethod, PaymentStatus } from '@crevea/shared';
+import { IPayment, PaymentMethod, PaymentStatus, getEventBus } from '@crevea/shared';
 import { EventType, IEvent, IPaymentCompletedPayload } from '@crevea/shared';
 import { v4 as uuidv4 } from 'uuid';
 import crypto from 'crypto';
@@ -94,7 +93,7 @@ export const processPayment = async (paymentId: string, method: PaymentMethod): 
         method: updatedPayment.method,
       },
     };
-    await publishEvent(event);
+    await getEventBus().publish(event);
   } else if (status === PaymentStatus.FAILED) {
     const event: IEvent = {
       id: uuidv4(),
@@ -102,7 +101,7 @@ export const processPayment = async (paymentId: string, method: PaymentMethod): 
       timestamp: new Date(),
       payload: { paymentId: updatedPayment.id, orderId: updatedPayment.orderId },
     };
-    await publishEvent(event);
+    await getEventBus().publish(event);
   }
 
   return mapPaymentToInterface(updatedPayment);

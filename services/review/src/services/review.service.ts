@@ -1,7 +1,6 @@
 import { getReviewRepository } from '../config/database';
 import { Review } from '@crevea/shared';
-import { ReviewType, ReviewStatus, IReview } from '@crevea/shared';
-import { publishEvent } from '../config/kafka';
+import { ReviewType, ReviewStatus, IReview, getEventBus } from '@crevea/shared';
 import { EventType, IEvent } from '@crevea/shared';
 import { v4 as uuidv4 } from 'uuid';
 import { sanitizeHtml, sanitizeText, isValidImageUrl } from '@crevea/shared';
@@ -55,7 +54,7 @@ export const create = async (data: CreateReviewData): Promise<IReview> => {
       rating: data.rating,
     },
   };
-  await publishEvent(event);
+  await getEventBus().publish(event);
 
   return mapReviewToInterface(review);
 };
@@ -103,7 +102,7 @@ export const updateStatus = async (id: string, status: ReviewStatus): Promise<IR
     timestamp: new Date(),
     payload: { reviewId: id },
   };
-  await publishEvent(event);
+  await getEventBus().publish(event);
 
   return mapReviewToInterface(review);
 };

@@ -9,7 +9,7 @@ import authRoutes from './routes/auth.routes';
 import oauthRoutes from './routes/oauth.routes';
 import { initDatabase } from './config/database';
 import { initRedis } from './config/redis';
-import { initKafka } from './config/kafka';
+import { getEventBus } from '@crevea/shared';
 
 
 
@@ -64,9 +64,9 @@ const start = async () => {
     await initRedis();
     logger.info('Redis connected');
 
-    // Initialize Kafka
-    await initKafka();
-    logger.info('Kafka connected');
+    // Initialize Event Bus (Redis/Kafka)
+    await getEventBus().connect();
+    logger.info('Event Bus connected');
 
     // Build and start server
     const server = await buildServer();
