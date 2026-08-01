@@ -10,7 +10,7 @@ export const sanitizeBody = async (
   _reply: FastifyReply
 ): Promise<void> => {
   if (request.body && typeof request.body === 'object') {
-    request.body = sanitizeObject(request.body as Record<string, any>);
+    request.body = sanitizeObject(request.body as import('../types/json.types').JsonObject);
   }
 };
 
@@ -22,7 +22,7 @@ export const sanitizeQuery = async (
   _reply: FastifyReply
 ): Promise<void> => {
   if (request.query && typeof request.query === 'object') {
-    request.query = sanitizeObject(request.query as Record<string, any>);
+    request.query = sanitizeObject(request.query as import('../types/json.types').JsonObject);
   }
 };
 

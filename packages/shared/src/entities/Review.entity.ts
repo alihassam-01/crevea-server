@@ -1,5 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Index, BeforeInsert, BeforeUpdate } from 'typeorm';
 import { ReviewType, ReviewStatus } from '../types/review.types';
+import { JsonObject } from '../types/json.types';
 import { sanitizeHtml, sanitizeText } from '../utils/sanitization';
 
 @Entity('reviews')
@@ -51,7 +52,7 @@ export class Review {
   verifiedPurchase!: boolean;
 
   @Column({ type: 'jsonb', nullable: true })
-  sellerResponse?: Record<string, any>;
+  sellerResponse?: JsonObject;
 
   @CreateDateColumn()
   createdAt!: Date;

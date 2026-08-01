@@ -33,9 +33,9 @@ export interface IPayment {
   method: PaymentMethod;
   status: PaymentStatus;
   gatewayTransactionId?: string;
-  gatewayResponse?: Record<string, any>;
+  gatewayResponse?: import('./json.types').JsonObject;
   failureReason?: string;
-  metadata?: Record<string, any>;
+  metadata?: import('./json.types').JsonObject;
   createdAt: Date;
   updatedAt: Date;
 }

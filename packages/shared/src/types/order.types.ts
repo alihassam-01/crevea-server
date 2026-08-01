@@ -57,7 +57,7 @@ export interface IOrderItem {
   quantity: number;
   price: number;
   subtotal: number;
-  attributes?: Record<string, any>;
+  attributes?: import('./json.types').JsonObject;
 }
 
 /**

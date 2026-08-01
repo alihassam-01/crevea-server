@@ -19,7 +19,7 @@ Quick reference for common frontend integration patterns with the Crevea API.
 ```typescript
 // Register new user
 const register = async (userData) => {
-  const response = await fetch('http://localhost:3001/auth/register', {
+  const response = await fetch('http://localhost:3000/auth/register', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -45,7 +45,7 @@ const register = async (userData) => {
 
 // Login
 const login = async (email, password) => {
-  const response = await fetch('http://localhost:3001/auth/login', {
+  const response = await fetch('http://localhost:3000/auth/login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password })
@@ -69,7 +69,7 @@ const login = async (email, password) => {
 const refreshToken = async () => {
   const refreshToken = localStorage.getItem('refreshToken');
   
-  const response = await fetch('http://localhost:3001/auth/refresh', {
+  const response = await fetch('http://localhost:3000/auth/refresh', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ refreshToken })
@@ -133,11 +133,7 @@ const fetchWithAuth = async (url, options = {}) => {
 ```typescript
 // Redirect to OAuth provider
 const loginWithGoogle = () => {
-  window.location.href = 'http://localhost:3001/oauth/google';
-};
-
-const loginWithFacebook = () => {
-  window.location.href = 'http://localhost:3001/oauth/facebook';
+  window.location.href = 'http://localhost:3000/oauth/google';
 };
 
 // Handle OAuth callback (on /auth/callback page)
@@ -165,7 +161,7 @@ const handleOAuthCallback = () => {
 ```typescript
 // 1. Add item to cart
 const addToCart = async (productId, shopId, quantity, price, productName, productImage) => {
-  const response = await fetchWithAuth('http://localhost:3004/cart/items', {
+  const response = await fetchWithAuth('http://localhost:3000/cart/items', {
     method: 'POST',
     body: JSON.stringify({
       productId,
@@ -182,13 +178,13 @@ const addToCart = async (productId, shopId, quantity, price, productName, produc
 
 // 2. Get cart
 const getCart = async () => {
-  const response = await fetchWithAuth('http://localhost:3004/cart');
+  const response = await fetchWithAuth('http://localhost:3000/cart');
   return response.json();
 };
 
 // 3. Update quantity
 const updateCartItem = async (productId, quantity) => {
-  const response = await fetchWithAuth(`http://localhost:3004/cart/items/${productId}`, {
+  const response = await fetchWithAuth(`http://localhost:3000/cart/items/${productId}`, {
     method: 'PUT',
     body: JSON.stringify({ quantity })
   });
@@ -198,7 +194,7 @@ const updateCartItem = async (productId, quantity) => {
 
 // 4. Remove item
 const removeFromCart = async (productId) => {
-  const response = await fetchWithAuth(`http://localhost:3004/cart/items/${productId}`, {
+  const response = await fetchWithAuth(`http://localhost:3000/cart/items/${productId}`, {
     method: 'DELETE'
   });
   
@@ -207,7 +203,7 @@ const removeFromCart = async (productId) => {
 
 // 5. Create order from cart
 const checkout = async (shippingAddress, paymentMethod) => {
-  const response = await fetchWithAuth('http://localhost:3004/order', {
+  const response = await fetchWithAuth('http://localhost:3000/order', {
     method: 'POST',
     body: JSON.stringify({
       shippingAddress,
@@ -235,19 +231,19 @@ const getProducts = async (filters = {}) => {
     ...(filters.sortOrder && { sortOrder: filters.sortOrder })
   });
   
-  const response = await fetch(`http://localhost:3003/product?${params}`);
+  const response = await fetch(`http://localhost:3000/product?${params}`);
   return response.json();
 };
 
 // Get single product
 const getProduct = async (productId) => {
-  const response = await fetch(`http://localhost:3003/product/${productId}`);
+  const response = await fetch(`http://localhost:3000/product/${productId}`);
   return response.json();
 };
 
 // Get shop products
 const getShopProducts = async (shopId, page = 1) => {
-  const response = await fetch(`http://localhost:3003/product/shop/${shopId}?page=${page}`);
+  const response = await fetch(`http://localhost:3000/product/shop/${shopId}?page=${page}`);
   return response.json();
 };
 ```
@@ -257,7 +253,7 @@ const getShopProducts = async (shopId, page = 1) => {
 ```typescript
 // Create shop
 const createShop = async (shopData) => {
-  const response = await fetchWithAuth('http://localhost:3002/shop', {
+  const response = await fetchWithAuth('http://localhost:3000/shop', {
     method: 'POST',
     body: JSON.stringify(shopData)
   });
@@ -267,13 +263,13 @@ const createShop = async (shopData) => {
 
 // Get seller's shops
 const getMyShops = async () => {
-  const response = await fetchWithAuth('http://localhost:3002/shop/seller/my-shops');
+  const response = await fetchWithAuth('http://localhost:3000/shop/seller/my-shops');
   return response.json();
 };
 
 // Update shop
 const updateShop = async (shopId, updates) => {
-  const response = await fetchWithAuth(`http://localhost:3002/shop/${shopId}`, {
+  const response = await fetchWithAuth(`http://localhost:3000/shop/${shopId}`, {
     method: 'PUT',
     body: JSON.stringify(updates)
   });
@@ -284,7 +280,7 @@ const updateShop = async (shopId, updates) => {
 // Get shop analytics
 const getShopAnalytics = async (shopId, period = 'month') => {
   const response = await fetchWithAuth(
-    `http://localhost:3002/shop/${shopId}/analytics?period=${period}`
+    `http://localhost:3000/shop/${shopId}/analytics?period=${period}`
   );
   return response.json();
 };
@@ -295,7 +291,7 @@ const getShopAnalytics = async (shopId, period = 'month') => {
 ```typescript
 // Create product
 const createProduct = async (productData) => {
-  const response = await fetchWithAuth('http://localhost:3003/product', {
+  const response = await fetchWithAuth('http://localhost:3000/product', {
     method: 'POST',
     body: JSON.stringify(productData)
   });
@@ -305,7 +301,7 @@ const createProduct = async (productData) => {
 
 // Update product
 const updateProduct = async (productId, updates) => {
-  const response = await fetchWithAuth(`http://localhost:3003/product/${productId}`, {
+  const response = await fetchWithAuth(`http://localhost:3000/product/${productId}`, {
     method: 'PUT',
     body: JSON.stringify(updates)
   });
@@ -315,7 +311,7 @@ const updateProduct = async (productId, updates) => {
 
 // Update inventory
 const updateInventory = async (productId, stock, lowStockThreshold) => {
-  const response = await fetchWithAuth(`http://localhost:3003/product/${productId}/inventory`, {
+  const response = await fetchWithAuth(`http://localhost:3000/product/${productId}/inventory`, {
     method: 'PUT',
     body: JSON.stringify({ stock, lowStockThreshold })
   });
@@ -329,25 +325,25 @@ const updateInventory = async (productId, stock, lowStockThreshold) => {
 ```typescript
 // Get user orders
 const getMyOrders = async (page = 1) => {
-  const response = await fetchWithAuth(`http://localhost:3004/order?page=${page}`);
+  const response = await fetchWithAuth(`http://localhost:3000/order?page=${page}`);
   return response.json();
 };
 
 // Get order details
 const getOrder = async (orderId) => {
-  const response = await fetchWithAuth(`http://localhost:3004/order/${orderId}`);
+  const response = await fetchWithAuth(`http://localhost:3000/order/${orderId}`);
   return response.json();
 };
 
 // Track order
 const trackOrder = async (orderId) => {
-  const response = await fetchWithAuth(`http://localhost:3004/order/${orderId}/tracking`);
+  const response = await fetchWithAuth(`http://localhost:3000/order/${orderId}/tracking`);
   return response.json();
 };
 
 // Cancel order
 const cancelOrder = async (orderId, reason) => {
-  const response = await fetchWithAuth(`http://localhost:3004/order/${orderId}/cancel`, {
+  const response = await fetchWithAuth(`http://localhost:3000/order/${orderId}/cancel`, {
     method: 'POST',
     body: JSON.stringify({ reason })
   });
@@ -361,7 +357,7 @@ const cancelOrder = async (orderId, reason) => {
 ```typescript
 // Create review
 const createReview = async (reviewData) => {
-  const response = await fetchWithAuth('http://localhost:3008/review', {
+  const response = await fetchWithAuth('http://localhost:3000/review', {
     method: 'POST',
     body: JSON.stringify({
       type: 'PRODUCT', // or 'SHOP'
@@ -379,7 +375,7 @@ const createReview = async (reviewData) => {
 // Get product reviews
 const getProductReviews = async (productId, page = 1) => {
   const response = await fetch(
-    `http://localhost:3008/review/target/${productId}?page=${page}`
+    `http://localhost:3000/review/target/${productId}?page=${page}`
   );
   return response.json();
 };
@@ -396,27 +392,27 @@ const getNotifications = async (page = 1, unreadOnly = false) => {
     ...(unreadOnly && { unreadOnly: 'true' })
   });
   
-  const response = await fetchWithAuth(`http://localhost:3006/notification?${params}`);
+  const response = await fetchWithAuth(`http://localhost:3000/notification?${params}`);
   return response.json();
 };
 
 // Mark as read
 const markNotificationAsRead = async (notificationId) => {
-  await fetchWithAuth(`http://localhost:3006/notification/${notificationId}/read`, {
+  await fetchWithAuth(`http://localhost:3000/notification/${notificationId}/read`, {
     method: 'PUT'
   });
 };
 
 // Mark all as read
 const markAllNotificationsAsRead = async () => {
-  await fetchWithAuth('http://localhost:3006/notification/read-all', {
+  await fetchWithAuth('http://localhost:3000/notification/read-all', {
     method: 'PUT'
   });
 };
 
 // WebSocket for real-time notifications
 const connectNotifications = () => {
-  const ws = new WebSocket('ws://localhost:3006/notification/ws');
+  const ws = new WebSocket('ws://localhost:3000/notification/ws');
   
   ws.onopen = () => {
     console.log('Connected to notifications');
@@ -452,7 +448,7 @@ const connectNotifications = () => {
 // api/client.ts
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:3001';
+const API_BASE_URL = 'http://localhost:3000';
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -542,14 +538,14 @@ export const authService = {
 // services/productService.ts
 export const productService = {
   getProducts: async (filters) => {
-    const response = await apiClient.get('http://localhost:3003/product', {
+    const response = await apiClient.get('http://localhost:3000/product', {
       params: filters
     });
     return response.data;
   },
   
   getProduct: async (id) => {
-    const response = await apiClient.get(`http://localhost:3003/product/${id}`);
+    const response = await apiClient.get(`http://localhost:3000/product/${id}`);
     return response.data;
   }
 };
@@ -836,15 +832,15 @@ const searchProducts = debounce(async (query) => {
 Create a `.env` file in your frontend project:
 
 ```env
-VITE_API_AUTH_URL=http://localhost:3001
-VITE_API_SHOP_URL=http://localhost:3002
-VITE_API_PRODUCT_URL=http://localhost:3003
-VITE_API_ORDER_URL=http://localhost:3004
-VITE_API_PAYMENT_URL=http://localhost:3005
-VITE_API_NOTIFICATION_URL=http://localhost:3006
-VITE_API_REVIEW_URL=http://localhost:3008
+VITE_API_AUTH_URL=http://localhost:3000
+VITE_API_SHOP_URL=http://localhost:3000
+VITE_API_PRODUCT_URL=http://localhost:3000
+VITE_API_ORDER_URL=http://localhost:3000
+VITE_API_PAYMENT_URL=http://localhost:3000
+VITE_API_NOTIFICATION_URL=http://localhost:3000
+VITE_API_REVIEW_URL=http://localhost:3000
 
-VITE_WS_NOTIFICATION_URL=ws://localhost:3006
+VITE_WS_NOTIFICATION_URL=ws://localhost:3000
 ```
 
 Use in code:
@@ -874,17 +870,17 @@ Example curl commands:
 
 ```bash
 # Register
-curl -X POST http://localhost:3001/auth/register \
+curl -X POST http://localhost:3000/auth/register \
   -H "Content-Type: application/json" \
   -d '{"email":"test@example.com","password":"Test123!","firstName":"John","lastName":"Doe","role":"CUSTOMER"}'
 
 # Login
-curl -X POST http://localhost:3001/auth/login \
+curl -X POST http://localhost:3000/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"test@example.com","password":"Test123!"}'
 
 # Get products
-curl http://localhost:3003/product?page=1&limit=20
+curl http://localhost:3000/product?page=1&limit=20
 ```
 
 ---

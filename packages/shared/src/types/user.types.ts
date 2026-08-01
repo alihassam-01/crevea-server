@@ -3,8 +3,8 @@
  */
 export enum UserRole {
   CUSTOMER = 'CUSTOMER',
-  SELLER = 'SELLER',
-  ADMIN = 'ADMIN',
+  VENDOR = 'VENDOR',
+  EXECUTIVE = 'EXECUTIVE',
 }
 
 /**
@@ -43,8 +43,6 @@ export interface IUser {
  */
 export enum OAuthProvider {
   GOOGLE = 'GOOGLE',
-  FACEBOOK = 'FACEBOOK',
-  APPLE = 'APPLE',
 }
 
 /**
@@ -136,7 +134,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.ORDER_WRITE,
     Permission.REVIEW_READ,
   ],
-  [UserRole.SELLER]: [
+  [UserRole.VENDOR]: [
     Permission.PRODUCT_READ,
     Permission.PRODUCT_WRITE,
     Permission.PRODUCT_DELETE,
@@ -147,5 +145,5 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.PAYMENT_READ,
     Permission.REVIEW_READ,
   ],
-  [UserRole.ADMIN]: Object.values(Permission),
+  [UserRole.EXECUTIVE]: Object.values(Permission),
 };

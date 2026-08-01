@@ -43,7 +43,10 @@ export const authenticate = async (
     request.user = payload;
     // Normalize role to uppercase string to avoid casing issues
     if (request.user && typeof request.user.role === 'string') {
-      request.user.role = request.user.role.toString().toUpperCase() as any;
+      const normalizedRole = request.user.role.toString().toUpperCase();
+      if (Object.values(UserRole).includes(normalizedRole as UserRole)) {
+        request.user.role = normalizedRole as UserRole;
+      }
     }
     // Debug log: show authenticated payload (safe to log id and role)
     console.log('[auth] user payload set:', {

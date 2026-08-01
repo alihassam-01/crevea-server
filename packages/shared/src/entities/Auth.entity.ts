@@ -1,5 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, Index } from 'typeorm';
 import { OAuthProvider } from '../types/user.types';
+import { JsonObject } from '../types/json.types';
 
 @Entity('oauth_accounts')
 export class OAuthAccount {
@@ -24,7 +25,7 @@ export class OAuthAccount {
   email?: string;
 
   @Column({ type: 'jsonb', nullable: true })
-  profile?: Record<string, any>;
+  profile?: JsonObject;
 
   @CreateDateColumn()
   createdAt!: Date;

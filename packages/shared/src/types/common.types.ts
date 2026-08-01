@@ -1,7 +1,9 @@
 /**
  * API Response wrapper
  */
-export interface IApiResponse<T = any> {
+import { JsonObject, JsonValue } from './json.types';
+
+export interface IApiResponse<T = JsonObject> {
   success: boolean;
   data?: T;
   error?: IApiError;
@@ -14,7 +16,7 @@ export interface IApiResponse<T = any> {
 export interface IApiError {
   code: string;
   message: string;
-  details?: any;
+  details?: JsonValue;
 }
 
 /**
@@ -42,7 +44,7 @@ export interface IPaginationQuery {
  */
 export interface ISearchQuery extends IPaginationQuery {
   q?: string;
-  filters?: Record<string, any>;
+  filters?: JsonObject;
 }
 
 /**

@@ -5,25 +5,22 @@
   "private": true,
   "workspaces": [
     "packages/*",
-    "services/*"
+    "services/app"
   ],
   "scripts": {
-    "dev": "turbo run dev --concurrency=20",
-    "build": "turbo run build",
-    "test": "turbo run test",
-    "lint": "turbo run lint",
-    "clean": "turbo run clean",
-    "docker:up": "docker-compose up -d",
-    "docker:down": "docker-compose down",
-    "docker:logs": "docker-compose logs -f"
+    "dev": "npm run build --workspace=@crevea/shared && npm run dev --workspace=@crevea/app",
+    "build": "npm run build --workspace=@crevea/shared && npm run build --workspace=@crevea/app",
+    "start": "npm run start --workspace=@crevea/app",
+    "test": "echo 'No tests configured yet'",
+    "lint": "echo 'No lint script configured yet'",
+    "clean": "rm -rf dist"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
-    "turbo": "^1.11.0",
     "typescript": "^5.3.3"
   },
   "engines": {
-    "node": ">=18.0.0",
+    "node": ">=20.0.0",
     "npm": ">=9.0.0"
   }
 }

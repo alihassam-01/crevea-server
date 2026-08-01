@@ -32,7 +32,7 @@ export interface IFile {
   size: number;
   url: string;
   variants?: IFileVariant[];
-  metadata?: Record<string, any>;
+  metadata?: import('./json.types').JsonObject;
   createdAt: Date;
 }
 

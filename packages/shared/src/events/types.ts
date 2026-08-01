@@ -59,7 +59,9 @@ export enum EventType {
 /**
  * Base Event Interface
  */
-export interface IEvent<T = any> {
+import { JsonObject } from '../types/json.types';
+
+export interface IEvent<T = JsonObject> {
   id: string;
   type: EventType;
   timestamp: Date;
@@ -119,5 +121,5 @@ export interface INotificationPayload {
   title: string;
   message: string;
   channels: string[];
-  data?: Record<string, any>;
+  data?: JsonObject;
 }

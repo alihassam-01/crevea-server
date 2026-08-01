@@ -1,6 +1,6 @@
 # Crevea API Routes Documentation
 
-> **Base URL**: `http://localhost:3001` (Auth Service), `http://localhost:3002` (Shop Service), etc.
+> **Base URL**: `http://localhost:3000` (Auth Service), `http://localhost:3000` (Shop Service), etc.
 >
 > **Version**: 1.0.0
 >
@@ -40,8 +40,8 @@ Authorization: Bearer <access_token>
 ### User Roles
 
 - `CUSTOMER` - Regular buyers
-- `SELLER` - Shop owners who can sell products
-- `ADMIN` - Platform administrators
+- `VENDOR` - Shop owners who can sell products
+- `EXECUTIVE` - Platform operations, moderation, and reporting
 
 ### Permissions
 
@@ -51,7 +51,7 @@ Different roles have different permissions. See the [Permission Matrix](#permiss
 
 ## Auth Service (Port 3001)
 
-Base URL: `http://localhost:3001`
+Base URL: `http://localhost:3000`
 
 ### Authentication Endpoints
 
@@ -79,7 +79,7 @@ Create a new user account.
 - `password`: Min 8 characters, must contain uppercase, lowercase, number, and special character
 - `firstName`: 1-100 characters
 - `lastName`: 1-100 characters
-- `role`: Either `CUSTOMER` or `SELLER` (default: `CUSTOMER`)
+- `role`: `CUSTOMER`, `VENDOR`, or `EXECUTIVE` (default: `CUSTOMER`)
 
 **Response (201 Created):**
 
@@ -319,36 +319,6 @@ Google OAuth callback (handled automatically).
 {FRONTEND_URL}/api/auth/callback?accessToken={token}&refreshToken={token}
 ```
 
----
-
-#### 2. Facebook OAuth
-
-**GET** `/api/oauth/facebook`
-
-Redirect to Facebook OAuth consent screen.
-
----
-
-**GET** `/api/oauth/facebook/callback`
-
-Facebook OAuth callback.
-
----
-
-#### 3. Apple OAuth
-
-**GET** `/api/oauth/apple`
-
-Redirect to Apple OAuth consent screen.
-
----
-
-**POST** `/api/oauth/apple/callback`
-
-Apple OAuth callback.
-
----
-
 ### Multi-Factor Authentication
 
 #### 1. Enable MFA
@@ -435,7 +405,7 @@ Disable two-factor authentication.
 
 ## Shop Service (Port 3002)
 
-Base URL: `http://localhost:3002`
+Base URL: `http://localhost:3000`
 
 ### Shop Endpoints
 
@@ -443,7 +413,7 @@ Base URL: `http://localhost:3002`
 
 **POST** `/api/shops`
 
-🔒 **Requires Authentication** | **Role:** SELLER
+🔒 **Requires Authentication** | **Role:** VENDOR
 
 Create a new shop.
 
@@ -757,7 +727,7 @@ Get shop analytics and statistics.
 
 **GET** `/api/shops/seller/my-shops`
 
-🔒 **Requires Authentication** | **Role:** SELLER
+🔒 **Requires Authentication** | **Role:** VENDOR
 
 Get all shops owned by the authenticated seller.
 
@@ -782,7 +752,7 @@ Get all shops owned by the authenticated seller.
 
 ## Product Service (Port 3003)
 
-Base URL: `http://localhost:3003`
+Base URL: `http://localhost:3000`
 
 ### Product Endpoints
 
@@ -1077,7 +1047,7 @@ Add a product variation (e.g., different size/color).
 
 ## Order Service (Port 3004)
 
-Base URL: `http://localhost:3004`
+Base URL: `http://localhost:3000`
 
 ### Order Endpoints
 
@@ -1361,7 +1331,7 @@ Get order tracking information.
 
 ## Cart Service (Port 3004)
 
-Base URL: `http://localhost:3004`
+Base URL: `http://localhost:3000`
 
 ### Cart Endpoints
 
@@ -1511,7 +1481,7 @@ Remove all items from cart.
 
 ## Payment Service (Port 3005)
 
-Base URL: `http://localhost:3005`
+Base URL: `http://localhost:3000`
 
 ### Payment Endpoints
 
@@ -1601,7 +1571,7 @@ PayFast payment notification webhook (no authentication required).
 
 ## Review Service (Port 3008)
 
-Base URL: `http://localhost:3008`
+Base URL: `http://localhost:3000`
 
 ### Review Endpoints
 
@@ -1765,7 +1735,7 @@ Reject a review.
 
 ## Notification Service (Port 3006)
 
-Base URL: `http://localhost:3006`
+Base URL: `http://localhost:3000`
 
 ### Notification Endpoints
 
@@ -1851,7 +1821,7 @@ Real-time notification updates.
 **Connection:**
 
 ```javascript
-const ws = new WebSocket('ws://localhost:3006/api/notifications/ws');
+const ws = new WebSocket('ws://localhost:3000/api/notifications/ws');
 
 ws.onopen = () => {
   console.log('Connected to notifications');
@@ -1882,7 +1852,7 @@ ws.onmessage = (event) => {
 
 ## Admin Service (Port 3009)
 
-Base URL: `http://localhost:3009`
+Base URL: `http://localhost:3000`
 
 ### Admin Endpoints
 
@@ -2035,7 +2005,7 @@ Get system health status.
 
 ## Promotion Service (Port 3010)
 
-Base URL: `http://localhost:3010`
+Base URL: `http://localhost:3000`
 
 ### Promotion Endpoints
 
@@ -2328,11 +2298,6 @@ FRONTEND_URL=http://localhost:9011
 # OAuth (Auth Service)
 GOOGLE_CLIENT_ID=your-google-client-id
 GOOGLE_CLIENT_SECRET=your-google-client-secret
-FACEBOOK_APP_ID=your-facebook-app-id
-FACEBOOK_APP_SECRET=your-facebook-app-secret
-APPLE_CLIENT_ID=your-apple-client-id
-APPLE_TEAM_ID=your-apple-team-id
-APPLE_KEY_ID=your-apple-key-id
 ```
 
 ---

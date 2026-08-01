@@ -1,3 +1,5 @@
+import { JsonValue } from '../types/json.types';
+
 /**
  * HTTP Status Codes
  */
@@ -23,14 +25,14 @@ export class BaseError extends Error {
   public readonly statusCode: number;
   public readonly isOperational: boolean;
   public readonly code: string;
-  public readonly details?: any;
+  public readonly details?: JsonValue;
 
   constructor(
     message: string,
     statusCode: number = HttpStatusCode.INTERNAL_SERVER_ERROR,
     code: string = 'INTERNAL_ERROR',
     isOperational: boolean = true,
-    details?: any
+    details?: JsonValue
   ) {
     super(message);
     Object.setPrototypeOf(this, new.target.prototype);
@@ -59,7 +61,7 @@ export class BaseError extends Error {
  * Validation Error
  */
 export class ValidationError extends BaseError {
-  constructor(message: string = 'Validation failed', details?: any) {
+  constructor(message: string = 'Validation failed', details?: JsonValue) {
     super(
       message,
       HttpStatusCode.BAD_REQUEST,
@@ -119,7 +121,7 @@ export class NotFoundError extends BaseError {
  * Conflict Error
  */
 export class ConflictError extends BaseError {
-  constructor(message: string = 'Resource already exists', details?: any) {
+  constructor(message: string = 'Resource already exists', details?: JsonValue) {
     super(
       message,
       HttpStatusCode.CONFLICT,
@@ -134,7 +136,7 @@ export class ConflictError extends BaseError {
  * Payment Error
  */
 export class PaymentError extends BaseError {
-  constructor(message: string = 'Payment processing failed', details?: any) {
+  constructor(message: string = 'Payment processing failed', details?: JsonValue) {
     super(
       message,
       HttpStatusCode.UNPROCESSABLE_ENTITY,
@@ -149,7 +151,7 @@ export class PaymentError extends BaseError {
  * External Service Error
  */
 export class ExternalServiceError extends BaseError {
-  constructor(service: string, message: string = 'External service error', details?: any) {
+  constructor(service: string, message: string = 'External service error', details?: JsonValue) {
     super(
       `${service}: ${message}`,
       HttpStatusCode.SERVICE_UNAVAILABLE,
@@ -178,7 +180,7 @@ export class RateLimitError extends BaseError {
  * Inventory Error
  */
 export class InventoryError extends BaseError {
-  constructor(message: string = 'Insufficient inventory', details?: any) {
+  constructor(message: string = 'Insufficient inventory', details?: JsonValue) {
     super(
       message,
       HttpStatusCode.UNPROCESSABLE_ENTITY,
@@ -193,7 +195,7 @@ export class InventoryError extends BaseError {
  * Business Logic Error
  */
 export class BusinessLogicError extends BaseError {
-  constructor(message: string, code: string = 'BUSINESS_LOGIC_ERROR', details?: any) {
+  constructor(message: string, code: string = 'BUSINESS_LOGIC_ERROR', details?: JsonValue) {
     super(
       message,
       HttpStatusCode.UNPROCESSABLE_ENTITY,

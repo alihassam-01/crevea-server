@@ -69,7 +69,9 @@ export const deepClone = <T>(obj: T): T => {
 /**
  * Remove undefined/null values from object
  */
-export const removeEmpty = <T extends Record<string, any>>(obj: T): Partial<T> => {
+import { JsonObject } from '../types/json.types';
+
+export const removeEmpty = <T extends JsonObject>(obj: T): Partial<T> => {
   return Object.fromEntries(
     Object.entries(obj).filter(([_, v]) => v != null)
   ) as Partial<T>;

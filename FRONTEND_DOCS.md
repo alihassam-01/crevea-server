@@ -68,13 +68,13 @@ npm run dev
 ```
 
 **Services will be available at:**
-- Auth Service: `http://localhost:3001`
-- Shop Service: `http://localhost:3002`
-- Product Service: `http://localhost:3003`
-- Order/Cart Service: `http://localhost:3004`
-- Payment Service: `http://localhost:3005`
-- Notification Service: `http://localhost:3006`
-- Review Service: `http://localhost:3008`
+- Auth Service: `http://localhost:3000`
+- Shop Service: `http://localhost:3000`
+- Product Service: `http://localhost:3000`
+- Order/Cart Service: `http://localhost:3000`
+- Payment Service: `http://localhost:3000`
+- Notification Service: `http://localhost:3000`
+- Review Service: `http://localhost:3000`
 
 ### Step 2: Test the API
 
@@ -87,12 +87,12 @@ npm run dev
 **Option B: Using curl**
 ```bash
 # Register
-curl -X POST http://localhost:3001/auth/register \
+curl -X POST http://localhost:3000/auth/register \
   -H "Content-Type: application/json" \
   -d '{"email":"test@example.com","password":"Test123!","firstName":"John","lastName":"Doe","role":"CUSTOMER"}'
 
 # Login
-curl -X POST http://localhost:3001/auth/login \
+curl -X POST http://localhost:3000/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"test@example.com","password":"Test123!"}'
 ```
@@ -152,8 +152,8 @@ Each service is independent and has its own:
 | Role | Can Do |
 |------|--------|
 | **CUSTOMER** | Browse products, add to cart, place orders, write reviews |
-| **SELLER** | Everything CUSTOMER can do + Create/manage shops and products |
-| **ADMIN** | Full access to all features + moderation and reporting |
+| **VENDOR** | Everything CUSTOMER can do + Create/manage shops and products |
+| **EXECUTIVE** | Platform operations, moderation, reporting, and vendor approvals |
 
 ---
 
@@ -181,7 +181,7 @@ Each service is independent and has its own:
 
 1. **Read:** [API_ROUTES.md](./API_ROUTES.md#4-websocket-connection) - WebSocket endpoint
 2. **Code:** [FRONTEND_INTEGRATION_GUIDE.md](./FRONTEND_INTEGRATION_GUIDE.md#notifications) - WebSocket integration
-3. **Test:** Connect to `ws://localhost:3006/notification/ws`
+3. **Test:** Connect to `ws://localhost:3000/notification/ws`
 
 ---
 
@@ -192,13 +192,13 @@ Each service is independent and has its own:
 Create a `.env` file in your frontend project:
 
 ```env
-VITE_API_AUTH_URL=http://localhost:3001
-VITE_API_SHOP_URL=http://localhost:3002
-VITE_API_PRODUCT_URL=http://localhost:3003
-VITE_API_ORDER_URL=http://localhost:3004
-VITE_API_PAYMENT_URL=http://localhost:3005
-VITE_API_NOTIFICATION_URL=http://localhost:3006
-VITE_API_REVIEW_URL=http://localhost:3008
+VITE_API_AUTH_URL=http://localhost:3000
+VITE_API_SHOP_URL=http://localhost:3000
+VITE_API_PRODUCT_URL=http://localhost:3000
+VITE_API_ORDER_URL=http://localhost:3000
+VITE_API_PAYMENT_URL=http://localhost:3000
+VITE_API_NOTIFICATION_URL=http://localhost:3000
+VITE_API_REVIEW_URL=http://localhost:3000
 ```
 
 ### TypeScript Types
@@ -251,7 +251,7 @@ Use this checklist when building your frontend:
 ### Authentication
 - [ ] User registration
 - [ ] User login
-- [ ] OAuth (Google, Facebook, Apple)
+- [ ] OAuth (Google)
 - [ ] Token refresh mechanism
 - [ ] Logout
 - [ ] Password reset flow
@@ -312,9 +312,9 @@ X-RateLimit-Reset: 1701691200
 
 Check service health:
 ```bash
-curl http://localhost:3001/health  # Auth
-curl http://localhost:3002/health  # Shop
-curl http://localhost:3003/health  # Product
+curl http://localhost:3000/health  # Auth
+curl http://localhost:3000/health  # Shop
+curl http://localhost:3000/health  # Product
 # etc.
 ```
 

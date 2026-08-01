@@ -39,7 +39,7 @@ export interface INotification {
   type: NotificationType;
   title: string;
   message: string;
-  data?: Record<string, any>;
+  data?: import('./json.types').JsonObject;
   channels: NotificationChannel[];
   isRead: boolean;
   readAt?: Date;

@@ -55,7 +55,7 @@
 - [x] **Features**:
   - User registration and login
   - JWT with refresh tokens
-  - OAuth2 (Google, Facebook, Apple)
+  - OAuth2 (Google)
   - Multi-factor authentication (TOTP)
   - Password reset flow
   - Email verification

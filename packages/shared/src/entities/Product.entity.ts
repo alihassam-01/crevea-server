@@ -1,5 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Index } from 'typeorm';
 import { ProductStatus, ProductType } from '../types/product.types';
+import { JsonObject } from '../types/json.types';
 
 @Entity('products')
 export class Product {
@@ -64,10 +65,10 @@ export class Product {
   weight?: number;
 
   @Column({ type: 'jsonb', nullable: true })
-  dimensions?: Record<string, any>;
+  dimensions?: JsonObject;
 
   @Column({ type: 'jsonb' })
-  attributes!: Record<string, any>;
+  attributes!: JsonObject;
 
   @Column({ type: 'decimal', precision: 3, scale: 2, default: 0 })
   rating!: number;

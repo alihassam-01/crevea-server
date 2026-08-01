@@ -1,5 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Index } from 'typeorm';
 import { ShopCategory, ShopStatus, VerificationStatus } from '../types/shop.types';
+import { JsonObject } from '../types/json.types';
 
 @Entity('shops')
 export class Shop {
@@ -50,7 +51,7 @@ export class Shop {
   verificationStatus!: VerificationStatus;
 
   @Column({ type: 'jsonb', nullable: true })
-  address?: Record<string, any>;
+  address?: JsonObject;
 
   @Column({ type: 'varchar', nullable: true })
   phone?: string;
@@ -59,7 +60,7 @@ export class Shop {
   email?: string;
 
   @Column({ type: 'jsonb', nullable: true })
-  socialLinks?: Record<string, any>;
+  socialLinks?: JsonObject;
 
   @Column({ type: 'decimal', precision: 5, scale: 2, default: 10 })
   commissionRate!: number;
@@ -74,7 +75,7 @@ export class Shop {
   totalSales!: number;
 
   @Column({ type: 'jsonb', nullable: true })
-  verificationDocuments?: Record<string, any>;
+  verificationDocuments?: JsonObject;
 
   @CreateDateColumn()
   createdAt!: Date;

@@ -4,7 +4,7 @@
 
 ### Prerequisites
 - Node.js 18+
-- Docker & Docker Compose
+- PostgreSQL and Redis running locally
 - npm 9+
 
 ### Installation
@@ -15,31 +15,20 @@
    npm install
    ```
 
-2. **Start infrastructure services:**
-   ```bash
-   npm run docker:up
-   ```
-   This starts PostgreSQL, Redis, Kafka, Zookeeper, and Elasticsearch.
-
-3. **Set up environment:**
+2. **Set up environment:**
    ```bash
    cp .env.example .env
    # Edit .env with your configuration
    ```
 
-4. **Build shared package:**
+3. **Build the application:**
    ```bash
-   npm run build --filter=@crevea/shared
+   npm run build
    ```
 
-5. **Run services:**
+4. **Run the application:**
    ```bash
-   # Run all services
    npm run dev
-
-   # Or run specific service
-   npm run dev --filter=@crevea/auth
-   npm run dev --filter=@crevea/shop
    ```
 
 ## 📁 Project Structure
@@ -47,7 +36,11 @@
 ```
 crevea-server/
 ├── packages/shared/          ✅ Complete - Types, errors, utilities
-├── services/
+├── services/app/
+│   ├── src/index.ts          ✅ Single application entrypoint (port 3000)
+│   ├── src/database.ts       ✅ Single PostgreSQL connection and repositories
+│   ├── src/redis.ts          ✅ Single Redis connection
+│   └── src/modules/          ✅ Auth, shop, product, order, payment, etc.
 │   ├── auth/                 ✅ Complete - JWT, OAuth2, MFA
 │   ├── shop/                 🔄 In Progress
 │   ├── product/              📦 Skeleton ready
@@ -61,7 +54,7 @@ crevea-server/
 │   ├── file/                 📦 Skeleton ready
 │   ├── search/               📦 Skeleton ready
 │   └── gateway/              📦 Skeleton ready
-└── docker-compose.yml        ✅ Complete
+└── .env                      ✅ Local configuration
 
 ## 🔑 Key Features Implemented
 
@@ -72,9 +65,9 @@ crevea-server/
 - **Events**: Kafka event definitions
 - **Middleware**: Auth, error handling, logging, rate limiting
 
-### ✅ Authentication Service (Port 3001)
+### ✅ Authentication module
 - JWT authentication with refresh tokens
-- OAuth2 (Google, Facebook, Apple)
+- OAuth2 (Google)
 - Multi-factor authentication (TOTP)
 - Session management with Redis
 - Password reset with email verification
@@ -93,9 +86,8 @@ crevea-server/
 - `POST /auth/mfa/verify` - Verify MFA token
 - `GET /auth/me` - Get current user
 - `GET /oauth/google` - Google OAuth
-- `GET /oauth/facebook` - Facebook OAuth
 
-### 🔄 Shop Service (Port 3002)
+### 🔄 Shop module
 - Database schema created
 - Infrastructure configured
 - Ready for implementation
@@ -119,15 +111,13 @@ npm run lint
 
 ## 📊 Infrastructure
 
-### Services Running (Docker Compose)
+### Local infrastructure
 - **PostgreSQL**: localhost:5432
 - **Redis**: localhost:6379
-- **Kafka**: localhost:9092
-- **Zookeeper**: localhost:2181
-- **Elasticsearch**: localhost:9200
+- The backend itself runs as one application on **localhost:3000**.
 
 ### Database Schema
-Each service manages its own tables:
+All modules use the same PostgreSQL database:
 - **Auth**: users, oauth_accounts, sessions, password_reset_tokens, email_verification_tokens
 - **Shop**: shops (with full schema)
 - **Product**: products, inventory, variations (to be created)
@@ -160,7 +150,7 @@ GOOGLE_CLIENT_SECRET=your-google-client-secret
 
 ## 📝 Next Steps
 
-1. **Complete Shop Service**: Add routes, controllers, services
+1. **Complete Shop module**: Add routes, controllers, services
 2. **Build Product Service**: Product catalog with category-specific attributes
 3. **Build Payment Service**: PayFast integration, split payments, escrow
 4. **Build Order Service**: Cart, order lifecycle, shipping
@@ -171,24 +161,17 @@ GOOGLE_CLIENT_SECRET=your-google-client-secret
 9. **Build Review Service**: Product and shop reviews
 10. **Build File Service**: Cloudflare R2, image optimization
 11. **Build Search Service**: Elasticsearch integration
-12. **Build API Gateway**: Request routing, service discovery
+12. **Split services later only when scale requires it**
 
 ## 🐛 Troubleshooting
 
 ### Database Connection Issues
 ```bash
-# Check if PostgreSQL is running
-docker ps | grep postgres
-
-# View logs
-npm run docker:logs
+# Check if PostgreSQL is running locally
+pg_isready -h localhost -p 5432
 ```
 
-### Kafka Connection Issues
-```bash
-# Restart Kafka
-docker-compose restart kafka zookeeper
-```
+Redis is currently still used for sessions, carts, and the in-process event handlers, so run Redis locally until that dependency is deliberately replaced.
 
 ## 📚 Documentation
 

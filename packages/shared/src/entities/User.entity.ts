@@ -1,5 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Index } from 'typeorm';
 import { UserRole, UserStatus } from '../types/user.types';
+import { JsonObject } from '../types/json.types';
 
 @Entity('users')
 export class User {
@@ -51,7 +52,7 @@ export class User {
   mfaSecret?: string;
 
   @Column({ type: 'jsonb', nullable: true })
-  preferences?: Record<string, any>;
+  preferences?: JsonObject;
 
   @CreateDateColumn()
   createdAt!: Date;

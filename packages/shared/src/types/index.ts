@@ -9,3 +9,4 @@ export * from './notification.types';
 export * from './promotion.types';
 export * from './file.types';
 export * from './common.types';
+export * from './json.types';

@@ -153,7 +153,7 @@ export interface IShopPayout {
   completedAt?: Date;
   approvedBy?: string;
   paymentMethod: string;
-  paymentDetails: any;
+  paymentDetails: import('./json.types').JsonObject;
   notes?: string;
   rejectionReason?: string;
   updatedAt: Date;

@@ -1,0 +1,39 @@
+{
+  "name": "@crevea/app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Crevea modular monolith application",
+  "scripts": {
+    "dev": "DOTENV_CONFIG_PATH=../../.env tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/app/src/index.js"
+  },
+  "dependencies": {
+    "@crevea/shared": "*",
+    "@fastify/cors": "^11.3.0",
+    "@fastify/helmet": "^13.1.0",
+    "@fastify/rate-limit": "^11.1.0",
+    "@fastify/websocket": "^11.3.0",
+    "axios": "^1.14.0",
+    "dotenv": "^16.3.1",
+    "fastify": "^5.11.0",
+    "handlebars": "^4.7.8",
+    "ioredis": "^5.3.2",
+    "jsonwebtoken": "^9.0.2",
+    "kafkajs": "^2.2.4",
+    "nodemailer": "^7.0.11",
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0",
+    "pg": "^8.11.3",
+    "qrcode": "^1.5.3",
+    "reflect-metadata": "^0.2.1",
+    "speakeasy": "^2.0.0",
+    "typeorm": "^0.3.28",
+    "uuid": "^9.0.1",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3"
+  }
+}

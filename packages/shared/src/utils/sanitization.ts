@@ -1,5 +1,6 @@
 import DOMPurify from 'isomorphic-dompurify';
 import validator from 'validator';
+import { JsonObject } from '../types/json.types';
 
 /**
  * Sanitize HTML content to prevent XSS attacks
@@ -87,18 +88,18 @@ export const sanitizeSqlInput = (input: string): string => {
 /**
  * Sanitize object by applying sanitization to all string values
  */
-export const sanitizeObject = <T extends Record<string, any>>(obj: T): T => {
-  const sanitized = { ...obj };
+export const sanitizeObject = <T extends JsonObject>(obj: T): T => {
+  const sanitized: JsonObject = { ...obj };
   
   for (const key in sanitized) {
     if (typeof sanitized[key] === 'string') {
-      sanitized[key] = sanitizeText(sanitized[key]) as any;
+      sanitized[key] = sanitizeText(String(sanitized[key]));
     } else if (Array.isArray(sanitized[key])) {
-      sanitized[key] = sanitizeStringArray(sanitized[key]) as any;
+      sanitized[key] = sanitizeStringArray(sanitized[key] as string[]);
     } else if (typeof sanitized[key] === 'object' && sanitized[key] !== null) {
-      sanitized[key] = sanitizeObject(sanitized[key]);
+      sanitized[key] = sanitizeObject(sanitized[key] as JsonObject);
     }
   }
   
-  return sanitized;
+  return sanitized as T;
 };

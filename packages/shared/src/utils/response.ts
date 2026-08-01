@@ -1,4 +1,4 @@
-import { IApiResponse, IApiMeta } from '../types';
+import { IApiResponse, IApiMeta, JsonValue } from '../types';
 
 /**
  * Success response
@@ -20,7 +20,7 @@ export const successResponse = <T>(
 export const errorResponse = (
   code: string,
   message: string,
-  details?: any
+  details?: JsonValue
 ): IApiResponse => {
   return {
     success: false,

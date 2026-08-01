@@ -9,7 +9,13 @@ export const validate = <T>(schema: z.ZodSchema<T>, data: unknown): T => {
     return schema.parse(data);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      throw new ValidationError('Validation failed', error.errors);
+      throw new ValidationError('Validation failed', {
+        issues: error.errors.map((issue) => ({
+          code: issue.code,
+          message: issue.message,
+          path: issue.path.map(String),
+        })),
+      });
     }
     throw error;
   }
