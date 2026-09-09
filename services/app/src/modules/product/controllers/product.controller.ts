@@ -2,6 +2,7 @@ import { successResponse, NotFoundError, AuthorizationError } from '@crevea/shar
 import * as productService from '../services/product.service';
 import * as inventoryService from '../services/inventory.service';
 import * as shopService from '../../shop/services/shop.service';
+import { deleteEntityAssets } from '../../asset/services/asset.service';
 
 export const createProduct = async (userId: string, data: any, authHeader?: string) => {
   // Verify user owns the shop. If `shopId` not provided, resolve via Shop service.
@@ -45,6 +46,7 @@ export const deleteProduct = async (id: string, userId: string) => {
     throw new AuthorizationError('You can only delete your own products');
   }
 
+  await deleteEntityAssets('products', id);
   await productService.deleteProduct(id);
 };
 
@@ -113,8 +115,7 @@ const getShopIdForUser = async (userId: string, _authHeader?: string): Promise<s
   return shops[0].id;
 };
 
-const verifyProductAccess = async (_shopId: string, _userId: string): Promise<boolean> => {
-  // This would verify the user owns the shop
-  // For now, returning true (implement proper check in production)
-  return true;
+const verifyProductAccess = async (shopId: string, userId: string): Promise<boolean> => {
+  const shop = await shopService.findById(shopId);
+  return shop?.sellerId === userId;
 };

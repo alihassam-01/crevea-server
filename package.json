@@ -8,9 +8,15 @@
     "services/app"
   ],
   "scripts": {
-    "dev": "npm run build --workspace=@crevea/shared && npm run dev --workspace=@crevea/app",
-    "build": "npm run build --workspace=@crevea/shared && npm run build --workspace=@crevea/app",
+    "dev": "npm run db:generate && npm run build --workspace=@crevea/shared && npm run dev --workspace=@crevea/app",
+    "build": "npm run db:generate && npm run build --workspace=@crevea/shared && npm run build --workspace=@crevea/app",
     "start": "npm run start --workspace=@crevea/app",
+    "db:generate": "npm run db:generate --workspace=@crevea/app",
+    "db:pull": "npm run db:pull --workspace=@crevea/app",
+    "db:migrate": "npm run db:migrate --workspace=@crevea/app",
+    "db:deploy": "npm run db:deploy --workspace=@crevea/app",
+    "db:status": "npm run db:status --workspace=@crevea/app",
+    "db:seed:admin": "tsx scripts/seed-admin.ts",
     "test": "echo 'No tests configured yet'",
     "lint": "echo 'No lint script configured yet'",
     "clean": "rm -rf dist"
@@ -22,5 +28,10 @@
   "engines": {
     "node": ">=20.0.0",
     "npm": ">=9.0.0"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1103.0",
+    "@aws-sdk/s3-request-presigner": "^3.1103.0",
+    "sharp": "^0.35.3"
   }
 }

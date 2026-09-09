@@ -1,0 +1,1 @@
+ALTER TABLE "vendor_stories" ADD COLUMN "images" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[];

@@ -1,6 +1,5 @@
-import { getSessionRepository, Session } from '../../../database';
+import { getSessionRepository, Session, greaterThan, lessThan } from '../../../database';
 import { ISession } from '@crevea/shared';
-import { MoreThan, LessThan } from 'typeorm';
 
 export const createSession = async (data: {
   userId: string;
@@ -23,7 +22,7 @@ export const findByRefreshToken = async (refreshToken: string): Promise<ISession
   const session = await sessionRepo.findOne({
     where: {
       refreshToken,
-      expiresAt: MoreThan(new Date()),
+      expiresAt: greaterThan(new Date()),
     },
   });
 
@@ -47,7 +46,7 @@ export const deleteAllUserSessions = async (userId: string): Promise<void> => {
 export const cleanExpiredSessions = async (): Promise<void> => {
   const sessionRepo = getSessionRepository();
   await sessionRepo.delete({
-    expiresAt: LessThan(new Date()),
+    expiresAt: lessThan(new Date()),
   });
 };
 

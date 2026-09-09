@@ -1,9 +1,22 @@
-import { successResponse, NotFoundError, AuthorizationError, ConflictError } from '@crevea/shared';
+import { successResponse, NotFoundError, AuthorizationError, ConflictError, ValidationError } from '@crevea/shared';
+import { getUserRepository } from '../../../database';
 import * as shopService from '../services/shop.service';
 import * as analyticsService from '../services/analytics.service';
-import { ShopStatus } from '@crevea/shared';
+import { ShopStatus, VerificationStatus } from '@crevea/shared';
+import { assertOwnedVerificationAssets, deleteEntityAssets } from '../../asset/services/asset.service';
 
 export const createShop = async (sellerId: string, data: any) => {
+  const seller = await getUserRepository().findOne({ where: { id: sellerId } });
+  const onboarding = seller?.preferences && typeof seller.preferences === 'object' && !Array.isArray(seller.preferences)
+    ? (seller.preferences as { vendorOnboarding?: { status?: string; documents?: unknown[] } }).vendorOnboarding
+    : undefined;
+  if (onboarding?.status !== 'PENDING' && onboarding?.status !== 'APPROVED') {
+    throw new ValidationError('Complete vendor onboarding before creating a shop');
+  }
+  if (!onboarding.documents || onboarding.documents.length !== 3) {
+    throw new ValidationError('CNIC front, CNIC back, and business proof are required');
+  }
+  await assertOwnedVerificationAssets(sellerId, onboarding.documents as string[]);
   // Check if seller already has a shop
   const existingShops = await shopService.findBySeller(sellerId);
   if (existingShops && existingShops.length > 0) {
@@ -47,6 +60,7 @@ export const deleteShop = async (id: string, userId: string) => {
     throw new AuthorizationError('You can only delete your own shop');
   }
 
+  await deleteEntityAssets('shops', id);
   await shopService.deleteShop(id);
 };
 
@@ -83,7 +97,16 @@ export const updateShopStatus = async (id: string, status: string, _notes?: stri
     throw new NotFoundError('Shop', id);
   }
 
-  const updated = await shopService.updateShop(id, { status: status as ShopStatus });
+  const nextStatus = status as ShopStatus;
+  const nextVerificationStatus = nextStatus === ShopStatus.ACTIVE
+    ? VerificationStatus.APPROVED
+    : nextStatus === ShopStatus.SUSPENDED || nextStatus === ShopStatus.CLOSED
+      ? VerificationStatus.REJECTED
+      : VerificationStatus.PENDING;
+  const updated = await shopService.updateShop(id, {
+    status: nextStatus,
+    verificationStatus: nextVerificationStatus,
+  });
   return successResponse(updated);
 };
 

@@ -11,7 +11,7 @@ import * as sessionService from '../services/session.service';
 import * as mfaService from '../services/mfa.service';
 import * as emailService from '../services/email.service';
 import { hashPassword, comparePassword } from '@crevea/shared';
-import { UserRole } from '@crevea/shared';
+import { UserRole, JsonValue } from '@crevea/shared';
 
 interface RegisterData {
   email: string;
@@ -144,6 +144,24 @@ export const resetPassword = async (token: string, newPassword: string) => {
 };
 
 /**
+ * Change password for an authenticated user.
+ */
+export const changePassword = async (userId: string, currentPassword: string, newPassword: string) => {
+  const user = await userService.findById(userId);
+  if (!user || !user.passwordHash) {
+    throw new AuthenticationError('This account does not have a password');
+  }
+
+  const isCurrentPasswordValid = await comparePassword(currentPassword, user.passwordHash);
+  if (!isCurrentPasswordValid) {
+    throw new AuthenticationError('Current password is incorrect');
+  }
+
+  await userService.updatePassword(userId, await hashPassword(newPassword));
+  return successResponse({ message: 'Password changed successfully' });
+};
+
+/**
  * Verify email
  */
 export const verifyEmail = async (token: string) => {
@@ -217,4 +235,17 @@ export const getCurrentUser = async (userId: string) => {
   }
 
   return userService.sanitizeUser(user);
+};
+
+export const updateCurrentUser = async (userId: string, data: { avatar?: string; savedAddresses?: JsonValue[]; vendorOnboarding?: JsonValue }) => {
+  const existing = await userService.findById(userId);
+  const existingPreferences = existing?.preferences && typeof existing.preferences === 'object' && !Array.isArray(existing.preferences)
+    ? existing.preferences as Record<string, unknown>
+    : {};
+  const user = await userService.updateUser(userId, {
+    ...(data.avatar ? { avatar: data.avatar } : {}),
+    ...(data.savedAddresses ? { preferences: { ...existingPreferences, savedAddresses: data.savedAddresses } } : {}),
+    ...(data.vendorOnboarding ? { preferences: { ...existingPreferences, ...(data.savedAddresses ? { savedAddresses: data.savedAddresses } : {}), vendorOnboarding: data.vendorOnboarding } } : {}),
+  });
+  return userService.sanitizeUser(user as any);
 };

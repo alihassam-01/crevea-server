@@ -34,6 +34,7 @@ export interface IUser {
   mfaEnabled: boolean;
   mfaSecret?: string;
   avatar?: string;
+  preferences?: Record<string, unknown>;
   createdAt: Date;
   updatedAt: Date;
 }

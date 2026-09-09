@@ -22,7 +22,7 @@ export const getShopAnalytics = async (
     revenueByDay: [],
   };
 
-  // Get total products using TypeORM's query method
+  // Get total products using Prisma's parameterized SQL query
   const productResult = await manager.query(
     'SELECT COUNT(*) FROM products WHERE shop_id = $1',
     [shopId]

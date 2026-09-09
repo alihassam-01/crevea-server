@@ -10,8 +10,10 @@ const logger = createLogger('event-handler');
 const eventToNotificationTypeMap: Partial<Record<EventType, NotificationType>> = {
   [EventType.ORDER_CREATED]: NotificationType.ORDER_CREATED,
   [EventType.ORDER_CONFIRMED]: NotificationType.ORDER_CONFIRMED,
+  [EventType.ORDER_PACKED]: NotificationType.ORDER_PACKED,
   [EventType.ORDER_SHIPPED]: NotificationType.ORDER_SHIPPED,
   [EventType.ORDER_DELIVERED]: NotificationType.ORDER_DELIVERED,
+  [EventType.ORDER_COMPLETED]: NotificationType.ORDER_COMPLETED,
   [EventType.ORDER_CANCELLED]: NotificationType.ORDER_CANCELLED,
   [EventType.PAYMENT_COMPLETED]: NotificationType.PAYMENT_RECEIVED,
   [EventType.PAYMENT_FAILED]: NotificationType.PAYMENT_FAILED,
@@ -36,6 +38,10 @@ export const handleAllEvents = async (event: IEvent): Promise<void> => {
         title: 'Order Confirmed',
         getMessage: (_p) => `Your order has been confirmed and is being processed.`,
       },
+      [EventType.ORDER_PACKED]: {
+        title: 'Order Packed',
+        getMessage: (_p) => `Your order has been packed and is preparing to ship.`,
+      },
       [EventType.ORDER_SHIPPED]: {
         title: 'Order Shipped',
         getMessage: (_p) => `Your order has been shipped!`,
@@ -43,6 +49,14 @@ export const handleAllEvents = async (event: IEvent): Promise<void> => {
       [EventType.ORDER_DELIVERED]: {
         title: 'Order Delivered',
         getMessage: (_p) => `Your order has been delivered.`,
+      },
+      [EventType.ORDER_COMPLETED]: {
+        title: 'Order Completed',
+        getMessage: (_p) => `Your order has been completed.`,
+      },
+      [EventType.ORDER_CANCELLED]: {
+        title: 'Order Cancelled',
+        getMessage: (_p) => `Your order has been cancelled.`,
       },
       [EventType.PAYMENT_COMPLETED]: {
         title: 'Payment Successful',
@@ -73,21 +87,26 @@ export const handleAllEvents = async (event: IEvent): Promise<void> => {
 
     // Determine user ID from payload
     const payload = event.payload as JsonObject & NotificationEventPayload;
-    const userId = payload.customerId || payload.userId || payload.sellerId;
-    if (!userId) {
+    const userIds = [...new Set([
+      payload.customerId,
+      payload.userId,
+      payload.sellerId,
+      ...(payload.vendorIds || []),
+    ].filter((userId): userId is string => typeof userId === 'string'))];
+    if (userIds.length === 0) {
       logger.warn(`No user ID found in event payload for: ${event.type}`);
       return;
     }
 
-    await notificationService.create({
+    await Promise.all(userIds.map((userId) => notificationService.create({
       userId,
       type: notificationType,
       title: config.title,
       message: config.getMessage(payload),
       data: payload,
-    });
+    })));
 
-    logger.info(`Notification created for user: ${userId}`);
+    logger.info(`Notifications created for users: ${userIds.join(', ')}`);
   } catch (error) {
     logger.error('Failed to handle event:', error);
   }

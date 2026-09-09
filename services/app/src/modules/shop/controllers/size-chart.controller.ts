@@ -1,8 +1,9 @@
 import { successResponse, NotFoundError } from '@crevea/shared';
 import * as sizeChartService from '../services/size-chart.service';
+import { assertShopOwnership } from '../services/vendor.service';
 
-export const createSizeChart = async (shopId: string, data: any, _userId: string) => {
-  // TODO: Verify user owns this shop
+export const createSizeChart = async (shopId: string, data: any, userId: string) => {
+  await assertShopOwnership(userId, shopId);
   const sizeChart = await sizeChartService.create(shopId, data);
   return successResponse(sizeChart);
 };
@@ -20,25 +21,25 @@ export const getSizeChart = async (id: string) => {
   return successResponse(sizeChart);
 };
 
-export const updateSizeChart = async (id: string, data: any, _userId: string) => {
+export const updateSizeChart = async (id: string, data: any, userId: string) => {
   const sizeChart = await sizeChartService.findById(id);
   if (!sizeChart) {
     throw new NotFoundError('Size Chart', id);
   }
 
-  // TODO: Verify user owns the shop that owns this size chart
+  await assertShopOwnership(userId, sizeChart.shopId);
 
   const updated = await sizeChartService.update(id, data);
   return successResponse(updated);
 };
 
-export const deleteSizeChart = async (id: string, _userId: string) => {
+export const deleteSizeChart = async (id: string, userId: string) => {
   const sizeChart = await sizeChartService.findById(id);
   if (!sizeChart) {
     throw new NotFoundError('Size Chart', id);
   }
 
-  // TODO: Verify user owns the shop that owns this size chart
+  await assertShopOwnership(userId, sizeChart.shopId);
 
   await sizeChartService.deleteSizeChart(id);
 };

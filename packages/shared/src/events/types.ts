@@ -100,6 +100,8 @@ export interface IOrderCreatedPayload {
   orderId: string;
   customerId: string;
   total: number;
+  paymentMethod: string;
+  vendorIds: string[];
   items: Array<{
     productId: string;
     shopId: string;

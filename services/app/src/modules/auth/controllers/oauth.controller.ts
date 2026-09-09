@@ -1,4 +1,5 @@
 import { ExternalServiceError } from '@crevea/shared';
+import https from 'node:https';
 import * as userService from '../services/user.service';
 import * as jwtService from '../services/jwt.service';
 import { UserRole, OAuthProvider } from '@crevea/shared';
@@ -26,6 +27,20 @@ interface GoogleUserInfo {
   picture?: string;
 }
 
+const googleRequest = (url: string, options: https.RequestOptions = {}, body?: string) => new Promise<{ statusCode: number; body: string }>((resolve, reject) => {
+  const request = https.request(url, { ...options, family: 4 }, (response) => {
+    let responseBody = '';
+    response.setEncoding('utf8');
+    response.on('data', (chunk) => { responseBody += chunk; });
+    response.on('end', () => resolve({ statusCode: response.statusCode || 500, body: responseBody }));
+  });
+
+  request.on('error', reject);
+  request.setTimeout(15000, () => request.destroy(new Error('Google request timed out')));
+  if (body) request.write(body);
+  request.end();
+});
+
 /**
  * Get Google OAuth URL
  */
@@ -46,35 +61,43 @@ export const getGoogleAuthUrl = (): string => {
  * Handle Google OAuth callback
  */
 export const handleGoogleCallback = async (code: string) => {
-  // Exchange code for tokens
-  const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      code,
-      client_id: process.env.GOOGLE_CLIENT_ID!,
-      client_secret: process.env.GOOGLE_CLIENT_SECRET!,
-      redirect_uri: process.env.GOOGLE_CALLBACK_URL!,
-      grant_type: 'authorization_code',
-    }),
-  });
+  if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET || !process.env.GOOGLE_CALLBACK_URL) {
+    throw new ExternalServiceError('Google', 'Google OAuth environment variables are not configured');
+  }
 
-  if (!tokenResponse.ok) {
+  // Exchange code for tokens
+  let tokenResponse: { statusCode: number; body: string };
+  try {
+    tokenResponse = await googleRequest('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    }, new URLSearchParams({
+        code,
+        client_id: process.env.GOOGLE_CLIENT_ID,
+        client_secret: process.env.GOOGLE_CLIENT_SECRET,
+        redirect_uri: process.env.GOOGLE_CALLBACK_URL,
+        grant_type: 'authorization_code',
+      }).toString());
+  } catch (error) {
+    throw new ExternalServiceError('Google', `Unable to reach Google OAuth: ${error instanceof Error ? error.message : 'network error'}`);
+  }
+
+  if (tokenResponse.statusCode < 200 || tokenResponse.statusCode >= 300) {
     throw new ExternalServiceError('Google', 'Failed to exchange code for tokens');
   }
 
-  const tokens = await tokenResponse.json() as GoogleTokenResponse;
+  const tokens = JSON.parse(tokenResponse.body) as GoogleTokenResponse;
 
   // Get user info
-  const userResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+  const userResponse = await googleRequest('https://www.googleapis.com/oauth2/v2/userinfo', {
     headers: { Authorization: `Bearer ${tokens.access_token}` },
   });
 
-  if (!userResponse.ok) {
+  if (userResponse.statusCode < 200 || userResponse.statusCode >= 300) {
     throw new ExternalServiceError('Google', 'Failed to fetch user info');
   }
 
-  const googleUser = await userResponse.json() as GoogleUserInfo;
+  const googleUser = JSON.parse(userResponse.body) as GoogleUserInfo;
 
   const userData: OAuthUserData = {
     providerId: googleUser.id,

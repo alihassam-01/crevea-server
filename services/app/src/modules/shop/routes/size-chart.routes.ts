@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import { validate, authenticate } from '@crevea/shared';
+import { validate, authenticate, authorize, UserRole } from '@crevea/shared';
 import * as sizeChartController from '../controllers/size-chart.controller';
 
 const createSizeChartSchema = z.object({
@@ -16,8 +16,9 @@ const updateSizeChartSchema = z.object({
 });
 
 export default async function sizeChartRoutes(server: FastifyInstance) {
+  const vendorOnly = [authenticate, authorize(UserRole.VENDOR)];
   // Create size chart
-  server.post('/:shopId/size-charts', { preHandler: authenticate }, async (request, reply) => {
+  server.post('/:shopId/size-charts', { preHandler: vendorOnly }, async (request, reply) => {
     const { shopId } = request.params as { shopId: string };
     const data = validate(createSizeChartSchema, request.body);
     const result = await sizeChartController.createSizeChart(shopId, data, request.user!.userId);
@@ -39,7 +40,7 @@ export default async function sizeChartRoutes(server: FastifyInstance) {
   });
 
   // Update size chart
-  server.put('/:shopId/size-charts/:id', { preHandler: authenticate }, async (request, reply) => {
+  server.put('/:shopId/size-charts/:id', { preHandler: vendorOnly }, async (request, reply) => {
     const { id } = request.params as { id: string };
     const data = validate(updateSizeChartSchema, request.body);
     const result = await sizeChartController.updateSizeChart(id, data, request.user!.userId);
@@ -47,7 +48,7 @@ export default async function sizeChartRoutes(server: FastifyInstance) {
   });
 
   // Delete size chart
-  server.delete('/:shopId/size-charts/:id', { preHandler: authenticate }, async (request, reply) => {
+  server.delete('/:shopId/size-charts/:id', { preHandler: vendorOnly }, async (request, reply) => {
     const { id } = request.params as { id: string };
     await sizeChartController.deleteSizeChart(id, request.user!.userId);
     return reply.status(204).send();

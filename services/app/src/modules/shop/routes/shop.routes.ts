@@ -10,6 +10,10 @@ const createShopSchema = z.object({
   category: z.enum(['CROCHET', 'ART', 'PAINTING', 'HANDCRAFT']),
   logo: z.string().url().optional(),
   banner: z.string().url().optional(),
+  deliveryFee: z.number().min(0).max(100000).optional(),
+  salePercent: z.number().min(0).max(100).optional(),
+  saleStartsAt: z.string().datetime().optional().nullable(),
+  saleEndsAt: z.string().datetime().optional().nullable(),
   contactEmail: z.string().email().optional(),
   contactPhone: z.string().optional(),
   address: z.object({

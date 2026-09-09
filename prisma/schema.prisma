@@ -1,0 +1,438 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../services/app/src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model assets {
+  id           String   @id(map: "PK_assets") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  environment  String   @db.VarChar(16)
+  domain       String   @db.VarChar(32)
+  entityId     String   @db.VarChar
+  assetType    String   @db.VarChar(32)
+  assetId      String   @db.Uuid
+  variant      String   @db.VarChar(32)
+  objectKey    String   @unique(map: "UQ_assets_object_key") @db.VarChar
+  contentHash  String   @db.VarChar(64)
+  mimeType     String   @db.VarChar(64)
+  size         Int
+  uploadedBy   String   @db.VarChar
+  createdAt    DateTime @default(now()) @db.Timestamp(6)
+  updatedAt    DateTime @default(now()) @db.Timestamp(6)
+
+  @@unique([domain, entityId, assetType, contentHash, variant], map: "UQ_assets_dedup")
+  @@index([domain, entityId, assetType], map: "IDX_assets_entity")
+  @@index([assetId], map: "IDX_assets_asset_id")
+}
+
+model email_verification_tokens {
+  id        String   @id(map: "PK_417a095bbed21c2369a6a01ab9a") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  userId    String   @db.VarChar
+  token     String   @unique(map: "UQ_3d1613f95c6a564a3b588d161ae") @db.VarChar
+  expiresAt DateTime @db.Timestamp(6)
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now()) @db.Timestamp(6)
+
+  @@index([userId], map: "IDX_10f285d038feb767bf7c2da14b")
+  @@index([token], map: "IDX_3d1613f95c6a564a3b588d161a")
+}
+
+model inventory {
+  id                String    @id(map: "PK_82aa5da437c5bbfb80703b08309") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  productId         String    @db.VarChar
+  variationId       String?   @db.VarChar
+  stock             Int       @default(0)
+  reserved          Int       @default(0)
+  available         Int       @default(0)
+  lowStockThreshold Int       @default(10)
+  restockDate       DateTime? @db.Timestamp(6)
+  updatedAt         DateTime  @default(now()) @db.Timestamp(6)
+
+  @@index([productId], map: "IDX_c8622e1e24c6d054d36e882449")
+}
+
+model notifications {
+  id        String   @id(map: "PK_6a72c3c0f683f6462415e653c3a") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  userId    String   @db.VarChar
+  type      String   @db.VarChar(50)
+  title     String   @db.VarChar(255)
+  message   String
+  data      Json?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now()) @db.Timestamp(6)
+
+  @@index([userId], map: "IDX_692a909ee0fa9383e7859f9b40")
+  @@index([read], map: "IDX_f8b7ed75170d2d7dca4477cc94")
+}
+
+model oauth_accounts {
+  id         String   @id(map: "PK_710a81523f515b78f894e33bb10") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  userId     String   @db.VarChar
+  provider   String   @db.VarChar
+  providerId String   @db.VarChar
+  email      String?  @db.VarChar
+  profile    Json?
+  createdAt  DateTime @default(now()) @db.Timestamp(6)
+
+  @@index([userId], map: "IDX_4c22f13249ce02f89dc6d226e9")
+  @@index([providerId], map: "IDX_bb75785331270a8da0860e915a")
+}
+
+model order_items {
+  id           String   @id(map: "PK_005269d8574e6fac0493715c308") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  orderId      String   @db.VarChar
+  productId    String   @db.VarChar
+  shopId       String   @db.VarChar
+  productName  String   @db.VarChar
+  productImage String?  @db.VarChar
+  quantity     Int
+  price        Decimal  @db.Decimal(10, 2)
+  total        Decimal  @db.Decimal(10, 2)
+  variation    Json?
+  createdAt    DateTime @default(now()) @db.Timestamp(6)
+
+  @@index([shopId], map: "IDX_25469b09ff158a602cf0b23441")
+  @@index([productId], map: "IDX_cdb99c05982d5191ac8465ac01")
+  @@index([orderId], map: "IDX_f1d359a55923bb45b057fbdab0")
+}
+
+model orders {
+  id              String   @id(map: "PK_710e2d4957aa5878dfe94e4ac2f") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  orderNumber     String   @unique(map: "UQ_59b0c3b34ea0fa5562342f24143") @db.VarChar
+  customerId      String   @db.VarChar
+  subtotal        Decimal  @db.Decimal(10, 2)
+  tax             Decimal  @default(0) @db.Decimal(10, 2)
+  shippingCost    Decimal  @default(0) @db.Decimal(10, 2)
+  discount        Decimal  @default(0) @db.Decimal(10, 2)
+  total           Decimal  @db.Decimal(10, 2)
+  status          String   @default("PENDING") @db.VarChar
+  shippingAddress Json
+  trackingNumber  String?  @db.VarChar
+  metadata        Json?
+  createdAt       DateTime @default(now()) @db.Timestamp(6)
+  updatedAt       DateTime @default(now()) @db.Timestamp(6)
+
+  @@index([orderNumber], map: "IDX_59b0c3b34ea0fa5562342f2414")
+  @@index([status], map: "IDX_775c9f06fc27ae3ff8fb26f2c4")
+  @@index([customerId], map: "IDX_e5de51ca888d8b1f5ac25799dd")
+}
+
+model password_reset_tokens {
+  id        String   @id(map: "PK_d16bebd73e844c48bca50ff8d3d") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  userId    String   @db.VarChar
+  token     String   @unique(map: "UQ_ab673f0e63eac966762155508ee") @db.VarChar
+  expiresAt DateTime @db.Timestamp(6)
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now()) @db.Timestamp(6)
+
+  @@index([token], map: "IDX_ab673f0e63eac966762155508e")
+  @@index([userId], map: "IDX_d6a19d4b4f6c62dcd29daa497e")
+}
+
+model payments {
+  id                   String   @id(map: "PK_197ab7af18c93fbb0c9b28b4a59") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  orderId              String   @db.VarChar
+  customerId           String   @db.VarChar
+  amount               Decimal  @db.Decimal(10, 2)
+  currency             String   @default("ZAR") @db.VarChar(3)
+  method               String   @db.VarChar
+  status               String   @default("PENDING") @db.VarChar
+  gatewayTransactionId String?  @db.VarChar
+  gatewayResponse      Json?
+  failureReason        String?
+  metadata             Json?
+  createdAt            DateTime @default(now()) @db.Timestamp(6)
+  updatedAt            DateTime @default(now()) @db.Timestamp(6)
+
+  @@index([status], map: "IDX_32b41cdb985a296213e9a928b5")
+  @@index([customerId], map: "IDX_824be6feda5e655c49c4e0c534")
+  @@index([orderId], map: "IDX_af929a5f2a400fdb6913b4967e")
+}
+
+model payouts {
+  id              String    @id(map: "PK_76855dc4f0a6c18c72eea302e87") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  shopId          String    @db.VarChar
+  requestedAmount Decimal   @db.Decimal(10, 2)
+  approvedAmount  Decimal?  @db.Decimal(10, 2)
+  status          String    @default("PENDING") @db.VarChar
+  paymentMethod   String    @db.VarChar
+  paymentDetails  Json
+  requestedAt     DateTime  @default(now()) @db.Timestamp(6)
+  approvedAt      DateTime? @db.Timestamp(6)
+  completedAt     DateTime? @db.Timestamp(6)
+  approvedBy      String?   @db.VarChar
+  notes           String?
+  rejectionReason String?
+  updatedAt       DateTime  @default(now()) @db.Timestamp(6)
+
+  @@index([shopId], map: "IDX_00bee286e10503ef93d9bc4a25")
+  @@index([status], map: "IDX_3f32ee6d2385d9a8bc0cc92af5")
+}
+
+model product_variations {
+  id              String   @id(map: "PK_353249b2d301e047dde9ef0487c") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  productId       String   @db.VarChar
+  name            String   @db.VarChar
+  sku             String?  @db.VarChar
+  priceAdjustment Decimal  @default(0) @db.Decimal(10, 2)
+  stock           Int      @default(0)
+  images          String[] @default([])
+  createdAt       DateTime @default(now()) @db.Timestamp(6)
+
+  @@index([productId], map: "IDX_a5bbc1e7886ded70ebf6a7c6f7")
+}
+
+model products {
+  id               String   @id(map: "PK_0806c755e0aca124e67c0cf6d7d") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  shopId           String   @db.VarChar
+  name             String   @db.VarChar
+  slug             String   @unique(map: "UQ_464f927ae360106b783ed0b4106") @db.VarChar
+  description      String?
+  shortDescription String?  @db.VarChar(500)
+  type             String   @default("PHYSICAL") @db.VarChar
+  status           String   @default("DRAFT") @db.VarChar
+  category         String   @db.VarChar(50)
+  tags             String[] @default([])
+  images           String[] @default([])
+  price            Decimal  @db.Decimal(10, 2)
+  compareAtPrice   Decimal? @db.Decimal(10, 2)
+  salePercent      Decimal  @default(0) @db.Decimal(5, 2)
+  saleStartsAt     DateTime? @db.Timestamp(6)
+  saleEndsAt       DateTime? @db.Timestamp(6)
+  currency         String   @default("ZAR") @db.VarChar(3)
+  sku              String?  @db.VarChar(100)
+  weight           Int?
+  dimensions       Json?
+  attributes       Json?    @default("{}")
+  rating           Decimal  @default(0) @db.Decimal(3, 2)
+  totalReviews     Int      @default(0)
+  totalSales       Int      @default(0)
+  isFeatured       Boolean  @default(false)
+  sizeChartId      String?  @db.VarChar
+  createdAt        DateTime @default(now()) @db.Timestamp(6)
+  updatedAt        DateTime @default(now()) @db.Timestamp(6)
+
+  @@index([status], map: "IDX_1846199852a695713b1f8f5e9a")
+  @@index([slug], map: "IDX_464f927ae360106b783ed0b410")
+  @@index([shopId], map: "IDX_51a281693ebef6fa8729de3938")
+  @@index([category], map: "IDX_c3932231d2385ac248d0888d95")
+}
+
+model coupons {
+  id                 String   @id(map: "PK_coupons") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  shopId             String   @db.VarChar
+  sellerId           String   @db.VarChar
+  code               String   @unique(map: "UQ_coupons_code") @db.VarChar(50)
+  discountType       String   @db.VarChar(16)
+  discountValue      Decimal  @db.Decimal(10, 2)
+  minPurchaseAmount  Decimal  @default(0) @db.Decimal(10, 2)
+  maxDiscountAmount  Decimal? @db.Decimal(10, 2)
+  usageLimit         Int?
+  usageCount         Int      @default(0)
+  startsAt           DateTime @default(now()) @db.Timestamp(6)
+  endsAt             DateTime @db.Timestamp(6)
+  active             Boolean  @default(true)
+  createdAt          DateTime @default(now()) @db.Timestamp(6)
+  updatedAt          DateTime @default(now()) @db.Timestamp(6)
+
+  @@index([shopId], map: "IDX_coupons_shop")
+  @@index([sellerId], map: "IDX_coupons_seller")
+}
+
+model return_requests {
+  id         String   @id(map: "PK_38714de8942bd9bc3a450a06889") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  orderId    String   @db.VarChar
+  customerId String   @db.VarChar
+  reason     String
+  status     String   @default("PENDING") @db.VarChar
+  images     String[] @default([])
+  createdAt  DateTime @default(now()) @db.Timestamp(6)
+  updatedAt  DateTime @default(now()) @db.Timestamp(6)
+
+  @@index([orderId], map: "IDX_01853126105daa52caee638ab8")
+  @@index([customerId], map: "IDX_dd314a4387a9e587093c3f5d9c")
+}
+
+model reviews {
+  id               String   @id(map: "PK_231ae565c273ee700b283f15c1d") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  type             String   @db.VarChar
+  targetId         String   @db.VarChar
+  customerId       String   @db.VarChar
+  orderId          String?  @db.VarChar
+  rating           Int
+  title            String?  @db.VarChar(255)
+  comment          String?
+  images           String[] @default([])
+  status           String   @default("PENDING") @db.VarChar
+  helpfulCount     Int      @default(0)
+  verifiedPurchase Boolean  @default(false)
+  sellerResponse   Json?
+  createdAt        DateTime @default(now()) @db.Timestamp(6)
+  updatedAt        DateTime @default(now()) @db.Timestamp(6)
+
+  @@index([targetId], map: "IDX_4a73980338b57f2c9178d8aaeb")
+  @@index([customerId], map: "IDX_6d99bdfa69280ede313699fab9")
+  @@index([status], map: "IDX_7b06c23cf52ca8aea0dcaf0ee2")
+}
+
+model seller_earnings {
+  id               String   @id(map: "PK_e244c4595c57cfd515a97591146") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  shopId           String   @db.VarChar
+  orderId          String   @db.VarChar
+  grossAmount      Decimal  @db.Decimal(10, 2)
+  commissionRate   Decimal  @db.Decimal(5, 2)
+  commissionAmount Decimal  @db.Decimal(10, 2)
+  netAmount        Decimal  @db.Decimal(10, 2)
+  status           String   @default("COMPLETED") @db.VarChar
+  createdAt        DateTime @default(now()) @db.Timestamp(6)
+  updatedAt        DateTime @default(now()) @db.Timestamp(6)
+
+  @@index([shopId], map: "IDX_41ef7cc9fc33b95bb9080178ef")
+  @@index([status], map: "IDX_eab30f04026be0499f77bba4ee")
+  @@index([orderId], map: "IDX_f1c3271a513dc103b5dd8d1a4f")
+}
+
+model sessions {
+  id           String   @id(map: "PK_3238ef96f18b355b671619111bc") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  userId       String   @db.VarChar
+  refreshToken String   @unique(map: "UQ_b443618a8149644123d48eceed4") @db.VarChar
+  expiresAt    DateTime @db.Timestamp(6)
+  ipAddress    String?  @db.VarChar
+  userAgent    String?  @db.VarChar
+  createdAt    DateTime @default(now()) @db.Timestamp(6)
+
+  @@index([userId], map: "IDX_57de40bc620f456c7311aa3a1e")
+  @@index([refreshToken], map: "IDX_b443618a8149644123d48eceed")
+}
+
+model shops {
+  id                    String   @id(map: "PK_3c6aaa6607d287de99815e60b96") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  slug                  String   @unique(map: "UQ_8c28ec876676eeb1dcb65c01b7f") @db.VarChar
+  sellerId              String   @db.VarChar
+  name                  String   @db.VarChar
+  description           String?
+  logo                  String?  @db.VarChar
+  banner                String?  @db.VarChar
+  category              String   @db.VarChar
+  status                String   @default("ACTIVE") @db.VarChar
+  verificationStatus    String   @default("PENDING") @db.VarChar
+  address               Json?
+  phone                 String?  @db.VarChar
+  email                 String?  @db.VarChar
+  socialLinks           Json?
+  commissionRate        Decimal  @default(10) @db.Decimal(5, 2)
+  deliveryFee           Decimal  @default(0) @db.Decimal(10, 2)
+  salePercent           Decimal  @default(0) @db.Decimal(5, 2)
+  saleStartsAt          DateTime? @db.Timestamp(6)
+  saleEndsAt            DateTime? @db.Timestamp(6)
+  rating                Decimal  @default(0) @db.Decimal(3, 2)
+  totalReviews          Int      @default(0)
+  totalSales            Int      @default(0)
+  verificationDocuments Json?
+  createdAt             DateTime @default(now()) @db.Timestamp(6)
+  updatedAt             DateTime @default(now()) @db.Timestamp(6)
+
+  @@index([status], map: "IDX_2b127fe6841559e3a9140669d6")
+  @@index([category], map: "IDX_893505f2f0b2e20518c37c7363")
+  @@index([slug], map: "IDX_8c28ec876676eeb1dcb65c01b7")
+  @@index([sellerId], map: "IDX_94194bc87b70e0b20bf4d1709c")
+  @@index([verificationStatus], map: "IDX_f50021088dc5fde0ca60f96d1e")
+}
+
+model size_charts {
+  id        String   @id(map: "PK_9a856588006e41aafef85dee028") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  shopId    String   @db.VarChar
+  name      String   @db.VarChar
+  imageUrl  String   @db.VarChar
+  category  String?  @db.VarChar
+  createdAt DateTime @default(now()) @db.Timestamp(6)
+  updatedAt DateTime @default(now()) @db.Timestamp(6)
+
+  @@index([shopId], map: "IDX_9524ef79037cdee39f5f8e8072")
+}
+
+model users {
+  id            String    @id(map: "PK_a3ffb1c0c8416b9fc6f907b7433") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  email         String    @unique(map: "UQ_97672ac88f789774dd47f7c8be3") @db.VarChar
+  passwordHash  String    @db.VarChar
+  firstName     String    @db.VarChar
+  lastName      String    @db.VarChar
+  phone         String?   @db.VarChar
+  avatar        String?   @db.VarChar
+  role          String    @default("CUSTOMER") @db.VarChar
+  status        String    @default("ACTIVE") @db.VarChar
+  emailVerified Boolean   @default(false)
+  mfaEnabled    Boolean   @default(false)
+  mfaSecret     String?   @db.VarChar
+  preferences   Json?
+  createdAt     DateTime  @default(now()) @db.Timestamp(6)
+  updatedAt     DateTime  @default(now()) @db.Timestamp(6)
+  lastLoginAt   DateTime? @db.Timestamp(6)
+
+  @@index([status], map: "IDX_3676155292d72c67cd4e090514")
+  @@index([email], map: "IDX_97672ac88f789774dd47f7c8be")
+  @@index([role], map: "IDX_ace513fa30d485cfd25c11a9e4")
+}
+
+model vendor_stories {
+  id           String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  vendorId     String    @unique @db.VarChar
+  title        String    @db.VarChar(255)
+  body         String
+  coverImageUrl String?   @db.VarChar
+  images       String[]  @default([])
+  videoUrl     String?    @db.VarChar
+  published    Boolean   @default(false)
+  publishedAt  DateTime? @db.Timestamp(6)
+  createdAt    DateTime  @default(now()) @db.Timestamp(6)
+  updatedAt    DateTime  @default(now()) @db.Timestamp(6)
+
+  @@index([vendorId], map: "IDX_vendor_stories_vendor_id")
+  @@index([published], map: "IDX_vendor_stories_published")
+}
+
+model wishlist_items {
+  id        String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  userId    String   @db.VarChar
+  productId String   @db.VarChar
+  createdAt DateTime @default(now()) @db.Timestamp(6)
+
+  @@unique([userId, productId], map: "UQ_wishlist_items_user_product")
+  @@index([userId], map: "IDX_wishlist_items_user_id")
+  @@index([productId], map: "IDX_wishlist_items_product_id")
+}
+
+model messages {
+  id          String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  senderId    String   @db.VarChar
+  recipientId String   @db.VarChar
+  orderId     String?  @db.VarChar
+  shopId      String?  @db.VarChar
+  body        String
+  read        Boolean  @default(false)
+  createdAt   DateTime @default(now()) @db.Timestamp(6)
+
+  @@index([senderId])
+  @@index([recipientId])
+  @@index([orderId])
+  @@index([shopId])
+  @@index([createdAt])
+}
+
+model content_pages {
+  id          String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  key         String   @unique @db.VarChar(100)
+  title       String   @db.VarChar(255)
+  body        String
+  version     Int      @default(1)
+  published   Boolean  @default(false)
+  createdBy   String   @db.VarChar
+  createdAt   DateTime @default(now()) @db.Timestamp(6)
+  updatedAt   DateTime @default(now()) @db.Timestamp(6)
+
+  @@index([key])
+  @@index([published])
+}

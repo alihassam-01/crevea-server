@@ -50,3 +50,4 @@ temp/
 #turbo
 ./turbo
 .turbo
+/services/app/src/generated/prisma/

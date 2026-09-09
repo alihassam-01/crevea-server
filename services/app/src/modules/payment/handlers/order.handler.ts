@@ -14,7 +14,7 @@ export const handleOrderCreated = async (event: IEvent<IOrderCreatedPayload>): P
       orderId: event.payload.orderId,
       customerId: event.payload.customerId,
       amount: event.payload.total,
-      method: PaymentMethod.CARD, // Default, will be updated
+      method: event.payload.paymentMethod as PaymentMethod,
     });
 
     logger.info(`Payment record created for order: ${event.payload.orderId}`);
@@ -28,6 +28,8 @@ export const toOrderCreatedEvent = (event: IEvent): IEvent<IOrderCreatedPayload>
   if (typeof payload.orderId !== 'string'
     || typeof payload.customerId !== 'string'
     || typeof payload.total !== 'number'
+    || typeof payload.paymentMethod !== 'string'
+    || !Array.isArray(payload.vendorIds)
     || !Array.isArray(payload.items)) return null;
 
   const items = payload.items.filter((item): item is JsonObject => typeof item === 'object' && item !== null)
@@ -41,6 +43,13 @@ export const toOrderCreatedEvent = (event: IEvent): IEvent<IOrderCreatedPayload>
 
   return {
     ...event,
-    payload: { orderId: payload.orderId, customerId: payload.customerId, total: payload.total, items },
+    payload: {
+      orderId: payload.orderId,
+      customerId: payload.customerId,
+      total: payload.total,
+      paymentMethod: payload.paymentMethod,
+      vendorIds: payload.vendorIds.filter((vendorId): vendorId is string => typeof vendorId === 'string'),
+      items,
+    },
   };
 };
