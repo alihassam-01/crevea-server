@@ -1,7 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { validate, authenticate, authorize, requirePermission } from '@crevea/shared';
-import { UserRole, Permission } from '@crevea/shared';
+import { UserRole, Permission, ShopStatus } from '@crevea/shared';
 import * as shopController from '../controllers/shop.controller';
 
 const createShopSchema = z.object({
@@ -29,6 +29,11 @@ const createShopSchema = z.object({
     twitter: z.string().url().optional(),
     website: z.string().url().optional(),
   }).optional(),
+});
+
+const updateShopStatusSchema = z.object({
+  status: z.nativeEnum(ShopStatus),
+  notes: z.string().max(1000).optional(),
 });
 
 const updateShopSchema = createShopSchema.partial();
@@ -95,7 +100,7 @@ export default async function shopRoutes(server: FastifyInstance) {
     preHandler: [authenticate, requirePermission(Permission.SHOP_APPROVE)]
   }, async (request, reply) => {
     const { id } = request.params as { id: string };
-    const { status, notes } = request.body as { status: string; notes?: string };
+    const { status, notes } = validate(updateShopStatusSchema, request.body);
     const result = await shopController.updateShopStatus(id, status, notes);
     return reply.send(result);
   });

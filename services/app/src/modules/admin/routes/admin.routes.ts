@@ -66,6 +66,14 @@ const contentSchema = z.object({
   published: z.boolean().default(false),
 });
 
+const contentKeySchema = z.object({
+  key: z.enum([
+    EXECUTIVE_CONTENT_KEYS.PRIVACY_POLICY,
+    EXECUTIVE_CONTENT_KEYS.TERMS_AND_CONDITIONS,
+    EXECUTIVE_CONTENT_KEYS.VENDOR_POLICY,
+  ]),
+});
+
 export default async function adminRoutes(server: FastifyInstance) {
   const executive = [authenticate, requirePermission(Permission.ADMIN_DASHBOARD)];
 
@@ -127,12 +135,12 @@ export default async function adminRoutes(server: FastifyInstance) {
   });
 
   server.get('/content/:key', { preHandler: executive }, async (request, reply) => {
-    const { key } = request.params as { key: keyof typeof EXECUTIVE_CONTENT_KEYS };
+    const { key } = validate(contentKeySchema, request.params);
     return reply.send(await adminController.getContentPage(EXECUTIVE_CONTENT_KEYS[key]));
   });
 
   server.put('/content/:key', { preHandler: executive }, async (request, reply) => {
-    const { key } = request.params as { key: keyof typeof EXECUTIVE_CONTENT_KEYS };
+    const { key } = validate(contentKeySchema, request.params);
     const data = validate(contentSchema.omit({ key: true }), request.body);
     return reply.send(await adminController.upsertContentPage(EXECUTIVE_CONTENT_KEYS[key], { ...data, published: data.published ?? false }, request.user!.userId));
   });

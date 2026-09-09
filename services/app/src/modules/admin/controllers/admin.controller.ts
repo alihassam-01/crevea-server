@@ -202,8 +202,13 @@ export const updateUser = async (id: string, data: { status?: UserStatus; role?:
   return successResponse(user);
 };
 
-export const createVendorShop = async (vendorId: string, data: Omit<Parameters<typeof shopService.create>[0], 'sellerId'>) =>
-  successResponse(await shopService.create({ ...data, sellerId: vendorId }));
+export const createVendorShop = async (vendorId: string, data: Omit<Parameters<typeof shopService.create>[0], 'sellerId'>) => {
+  const vendor = await getUserRepository().findOne({ where: { id: vendorId } });
+  if (!vendor || vendor.role !== UserRole.VENDOR) throw new Error('A valid vendor account is required');
+  const existingShops = await shopService.findBySeller(vendorId);
+  if (existingShops.length > 0) throw new Error('Vendor already has a shop');
+  return successResponse(await shopService.create({ ...data, sellerId: vendorId }));
+};
 
 export const getPendingShops = async (filters: PageFilter) => {
   const [shops, total] = await getShopRepository().findAndCount({
