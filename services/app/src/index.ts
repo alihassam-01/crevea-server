@@ -1,4 +1,3 @@
-import 'reflect-metadata';
 import 'dotenv/config';
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
@@ -20,7 +19,12 @@ import notificationRoutes from './modules/notification/routes/notification.route
 import reviewRoutes from './modules/review/routes/review.routes';
 import adminRoutes from './modules/admin/routes/admin.routes';
 import payoutRoutes from './modules/admin/routes/payout.routes';
+import vendorRoutes from './modules/shop/routes/vendor.routes';
 import promotionRoutes from './modules/promotion/routes/promotion.routes';
+import vendorStoryRoutes from './modules/vendor-story/routes/vendor-story.routes';
+import wishlistRoutes from './modules/wishlist/routes/wishlist.routes';
+import messageRoutes from './modules/message/routes/message.routes';
+import assetRoutes from './modules/asset/routes/asset.routes';
 import { handleOrderCreated, toOrderCreatedEvent } from './modules/payment/handlers/order.handler';
 import { handleAllEvents } from './modules/notification/handlers/event.handler';
 import { handleEmailEvents } from './modules/email/handlers/email.handler';
@@ -52,7 +56,12 @@ export async function buildServer() {
   await server.register(reviewRoutes, { prefix: '/api/reviews' });
   await server.register(adminRoutes, { prefix: '/api/admin' });
   await server.register(payoutRoutes, { prefix: '/api/admin' });
+  await server.register(vendorRoutes, { prefix: '/api/vendor' });
   await server.register(promotionRoutes, { prefix: '/api/promotions' });
+  await server.register(vendorStoryRoutes, { prefix: '/api/vendors' });
+  await server.register(wishlistRoutes, { prefix: '/api/wishlist' });
+  await server.register(messageRoutes, { prefix: '/api/messages' });
+  await server.register(assetRoutes, { prefix: '/api/assets' });
 
   server.setErrorHandler(errorHandler);
   server.setNotFoundHandler(notFoundHandler);
@@ -70,7 +79,18 @@ async function start() {
       const orderEvent = toOrderCreatedEvent(event);
       if (orderEvent) await handleOrderCreated(orderEvent);
     });
-    await events.subscribe([EventType.ORDER_CREATED, EventType.ORDER_CONFIRMED, EventType.ORDER_SHIPPED, EventType.ORDER_DELIVERED, EventType.PAYMENT_COMPLETED, EventType.SHOP_APPROVED, EventType.SHOP_REJECTED], handleAllEvents);
+    await events.subscribe([
+      EventType.ORDER_CREATED,
+      EventType.ORDER_CONFIRMED,
+      EventType.ORDER_PACKED,
+      EventType.ORDER_SHIPPED,
+      EventType.ORDER_DELIVERED,
+      EventType.ORDER_COMPLETED,
+      EventType.ORDER_CANCELLED,
+      EventType.PAYMENT_COMPLETED,
+      EventType.SHOP_APPROVED,
+      EventType.SHOP_REJECTED,
+    ], handleAllEvents);
     await events.subscribe([EventType.EMAIL_SEND], handleEmailEvents);
 
     const server = await buildServer();

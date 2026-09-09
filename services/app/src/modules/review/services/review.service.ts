@@ -1,5 +1,5 @@
 import { getReviewRepository } from '../../../database';
-import { Review } from '@crevea/shared';
+import { Review } from '../../../database';
 import { ReviewType, ReviewStatus, IReview, getEventBus } from '@crevea/shared';
 import { EventType, IEvent } from '@crevea/shared';
 import { v4 as uuidv4 } from 'uuid';
@@ -110,7 +110,7 @@ export const updateStatus = async (id: string, status: ReviewStatus): Promise<IR
 const mapReviewToInterface = (review: Review): IReview => {
   return {
     id: review.id,
-    type: review.type,
+    type: review.type as ReviewType,
     targetId: review.targetId,
     customerId: review.customerId,
     orderId: review.orderId,
@@ -118,7 +118,7 @@ const mapReviewToInterface = (review: Review): IReview => {
     title: review.title,
     comment: review.comment || '',
     images: review.images,
-    status: review.status,
+    status: review.status as ReviewStatus,
     helpfulCount: review.helpfulCount,
     verifiedPurchase: review.verifiedPurchase,
     sellerResponse: review.sellerResponse as IReview['sellerResponse'],

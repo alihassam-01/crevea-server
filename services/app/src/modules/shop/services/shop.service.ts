@@ -1,9 +1,8 @@
-import { getShopRepository, Shop } from '../../../database';
+import { getShopRepository, Shop, contains } from '../../../database';
 import { ShopCategory, ShopStatus, VerificationStatus, IShop, getEventBus } from '@crevea/shared';
 import { EventType, IEvent } from '@crevea/shared';
 import { v4 as uuidv4 } from 'uuid';
 import { sanitizeHtml, sanitizeText, slugify, sanitizeEmail } from '@crevea/shared';
-import { Like } from 'typeorm';
 
 interface CreateShopData {
   sellerId: string;
@@ -12,8 +11,14 @@ interface CreateShopData {
   description?: string;
   logo?: string;
   banner?: string;
+  deliveryFee?: number;
+  salePercent?: number;
+  saleStartsAt?: Date | null;
+  saleEndsAt?: Date | null;
   category: ShopCategory;
   address?: any;
+  contactPhone?: string;
+  contactEmail?: string;
   phone?: string;
   email?: string;
   socialLinks?: any;
@@ -49,10 +54,16 @@ export const create = async (data: CreateShopData): Promise<IShop> => {
     status: ShopStatus.ACTIVE,
     verificationStatus: VerificationStatus.PENDING,
     address: data.address,
-    phone: data.phone,
-    email: data.email ? sanitizeEmail(data.email) : undefined,
+    // The public API calls these fields contactPhone/contactEmail, while the
+    // database columns are phone/email.
+    phone: data.contactPhone ?? data.phone,
+    email: (data.contactEmail ?? data.email) ? sanitizeEmail(data.contactEmail ?? data.email!) : undefined,
     socialLinks: data.socialLinks,
     commissionRate: 10,
+    deliveryFee: data.deliveryFee || 0,
+    salePercent: data.salePercent || 0,
+    saleStartsAt: data.saleStartsAt || undefined,
+    saleEndsAt: data.saleEndsAt || undefined,
     rating: 0,
     totalReviews: 0,
     totalSales: 0,
@@ -118,7 +129,7 @@ export const search = async (
   }
 
   if (query) {
-    where.name = Like(`%${query}%`);
+    where.name = contains(query);
   }
 
   const [shops, total] = await shopRepo.findAndCount({
@@ -134,11 +145,19 @@ export const search = async (
   };
 };
 
-export const updateShop = async (id: string, data: Partial<Shop>): Promise<IShop> => {
+export const updateShop = async (id: string, data: Partial<Shop> & { contactPhone?: string; contactEmail?: string }): Promise<IShop> => {
   const shopRepo = getShopRepository();
 
   // Sanitize if updating text fields
-  const updateData: any = { ...data };
+  const updateData: Partial<Shop> = { ...data };
+  if ('contactPhone' in data) {
+    updateData.phone = data.contactPhone;
+  }
+  if ('contactEmail' in data) {
+    updateData.email = data.contactEmail ? sanitizeEmail(data.contactEmail) : data.contactEmail;
+  }
+  delete (updateData as Partial<Shop> & { contactPhone?: string; contactEmail?: string }).contactPhone;
+  delete (updateData as Partial<Shop> & { contactPhone?: string; contactEmail?: string }).contactEmail;
   if (updateData.name) updateData.name = sanitizeText(updateData.name);
   if (updateData.description) updateData.description = sanitizeHtml(updateData.description);
   if (updateData.email) updateData.email = sanitizeEmail(updateData.email);
@@ -219,6 +238,10 @@ const mapShopToInterface = (shop: Shop): IShop => {
     contactEmail: shop.email,
     socialLinks: shop.socialLinks as any,
     commissionRate: parseFloat(shop.commissionRate.toString()),
+    deliveryFee: parseFloat(shop.deliveryFee.toString()),
+    salePercent: parseFloat(shop.salePercent.toString()),
+    saleStartsAt: shop.saleStartsAt,
+    saleEndsAt: shop.saleEndsAt,
     rating: parseFloat(shop.rating.toString()),
     totalReviews: shop.totalReviews,
     totalSales: shop.totalSales,

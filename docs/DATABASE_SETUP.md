@@ -164,5 +164,5 @@ For production environments:
 - Use separate PostgreSQL instances for critical services
 - Implement database replication for high availability
 - Set up automated backups for each database
-- Use connection pooling (already configured in TypeORM)
+- Use connection pooling (configured through Prisma's PostgreSQL adapter)
 - Monitor database performance separately per service

@@ -1,12 +1,16 @@
-import { successResponse, NotFoundError } from '@crevea/shared';
+import { successResponse, NotFoundError, AuthorizationError } from '@crevea/shared';
 import * as paymentService from '../services/payment.service';
 import { PaymentMethod } from '@crevea/shared';
+import * as orderService from '../../order/services/order.service';
 
-export const processPayment = async (paymentId: string, method: PaymentMethod, _userId: string) => {
+export const processPayment = async (paymentId: string, method: PaymentMethod, userId: string) => {
   const payment = await paymentService.findById(paymentId);
   
   if (!payment) {
     throw new NotFoundError('Payment', paymentId);
+  }
+  if (payment.customerId !== userId) {
+    throw new AuthorizationError('You can only process your own payments');
   }
 
   const processed = await paymentService.processPayment(paymentId, method);
@@ -22,13 +26,18 @@ export const getPayment = async (id: string, userId: string) => {
 
   // Verify ownership
   if (payment.customerId !== userId) {
-    // throw new AuthorizationError(); // Uncomment when AuthorizationError is imported
+    throw new AuthorizationError('You can only view your own payments');
   }
 
   return successResponse(payment);
 };
 
-export const getPaymentByOrder = async (orderId: string, _userId: string) => {
+export const getPaymentByOrder = async (orderId: string, userId: string) => {
+  const order = await orderService.findById(orderId);
+  if (!order) throw new NotFoundError('Order', orderId);
+  if (order.customerId !== userId) {
+    throw new AuthorizationError('You can only view payments for your own orders');
+  }
   const payment = await paymentService.findByOrderId(orderId);
   
   if (!payment) {

@@ -2,6 +2,8 @@ import { getPasswordResetTokenRepository, getEmailVerificationTokenRepository } 
 import { createLogger } from '@crevea/shared';
 import { v4 as uuidv4 } from 'uuid';
 import { addHours } from '@crevea/shared';
+import { randomInt } from 'crypto';
+import { sendEmail as sendTransactionalEmail } from '../../email/services/email.service';
 
 const logger = createLogger('email-service');
 
@@ -42,7 +44,7 @@ export const sendPasswordResetEmail = async (userId: string, email: string): Pro
   const tokenRepo = getPasswordResetTokenRepository();
 
   // Generate token
-  const token = uuidv4();
+  const token = randomInt(100000, 1000000).toString();
   const expiresAt = addHours(new Date(), 1); // 1 hour
 
   // Save token
@@ -55,13 +57,12 @@ export const sendPasswordResetEmail = async (userId: string, email: string): Pro
 
   await tokenRepo.save(resetToken);
 
-  // Send email
-  const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
-  await sendEmail(
-    email,
-    'Reset your password',
-    `<p>Click <a href="${resetUrl}">here</a> to reset your password.</p>`
-  );
+  await sendTransactionalEmail({
+    to: email,
+    subject: 'Your Crevea password reset code',
+    text: `Your Crevea password reset code is ${token}. It expires in one hour.`,
+    html: `<p>Your Crevea password reset code is:</p><p style="font-size:24px;font-weight:bold;letter-spacing:6px">${token}</p><p>This code expires in one hour.</p>`,
+  });
 };
 
 export const verifyEmailToken = async (token: string): Promise<string> => {

@@ -1,70 +1,177 @@
-import 'reflect-metadata';
-import { DataSource } from 'typeorm';
-import { createLogger, Review } from '@crevea/shared';
-import { User, OAuthAccount, Session, PasswordResetToken, EmailVerificationToken } from './modules/auth/entities';
-import { Shop, SizeChart, SellerEarnings, Payout } from './modules/shop/entities';
-import { Product, Inventory, ProductVariation } from './modules/product/entities';
-import { Order, OrderItem, ReturnRequest } from './modules/order/entities';
-import { Payment } from './modules/payment/entities';
-import { Notification } from './modules/notification/entities';
+import { PrismaPg } from '@prisma/adapter-pg';
+import {
+  PrismaClient,
+} from './generated/prisma/client';
+import {
+  EmailVerificationToken, Inventory, Notification, OAuthAccount, OrderItem, Order,
+  PasswordResetToken, Payment, Payout, ProductVariation, Product, ReturnRequest,
+  Review, SellerEarnings, Session, Shop, SizeChart, User,
+  Message, ContentPage, VendorStory, WishlistItem, Asset, Coupon,
+} from './database.types';
 
-export { User, OAuthAccount, Session, PasswordResetToken, EmailVerificationToken } from './modules/auth/entities';
-export { Shop, SizeChart, SellerEarnings, Payout } from './modules/shop/entities';
-export { Product, Inventory, ProductVariation } from './modules/product/entities';
-export { Order, OrderItem, ReturnRequest } from './modules/order/entities';
-export { Payment } from './modules/payment/entities';
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString) {
+  throw new Error('DATABASE_URL is required');
+}
 
-const logger = createLogger('database');
+const adapter = new PrismaPg({ connectionString });
+export const prisma = new PrismaClient({ adapter });
 
-export const AppDataSource = new DataSource({
-  type: 'postgres',
-  url: process.env.DATABASE_URL,
-  synchronize: process.env.NODE_ENV === 'development',
-  logging: process.env.NODE_ENV === 'development',
-  entities: [
-    User, OAuthAccount, Session, PasswordResetToken, EmailVerificationToken,
-    Shop, SizeChart, SellerEarnings, Payout,
-    Product, Inventory, ProductVariation,
-    Order, OrderItem, ReturnRequest,
-    Payment, Notification, Review,
-  ],
-  subscribers: [],
-  migrations: [],
-  maxQueryExecutionTime: 1000,
-  poolSize: 20,
-});
+type QueryOptions = {
+  where?: Record<string, unknown> | Array<Record<string, unknown>>;
+  order?: Record<string, 'ASC' | 'DESC'>;
+  take?: number;
+  skip?: number;
+};
+
+type PrismaDelegate<T> = {
+  create(args: { data: unknown }): Promise<T>;
+  createMany(args: { data: unknown }): Promise<{ count: number }>;
+  findFirst(args: { where?: unknown; orderBy?: unknown }): Promise<T | null>;
+  findMany(args?: { where?: unknown; orderBy?: unknown; take?: number; skip?: number }): Promise<T[]>;
+  count(args?: { where?: unknown }): Promise<number>;
+  updateMany(args: { where: unknown; data: unknown }): Promise<{ count: number }>;
+  deleteMany(args: { where: unknown }): Promise<{ count: number }>;
+};
+
+const toPrismaWhere = (where: QueryOptions['where']): unknown => {
+  if (!where) return undefined;
+  if (Array.isArray(where)) return { OR: where.map(toPrismaWhere) };
+
+  const result: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(where)) {
+    if (key === 'OR' && Array.isArray(value)) {
+      result.OR = value.map(item => toPrismaWhere(item as Record<string, unknown>));
+      continue;
+    }
+    if (value && typeof value === 'object' && '__contains' in value) {
+      result[key] = { contains: (value as { __contains: string }).__contains, mode: 'insensitive' };
+    } else if (value && typeof value === 'object' && '__in' in value) {
+      result[key] = { in: (value as { __in: string[] }).__in };
+    } else if (value && typeof value === 'object' && ('__gt' in value || '__lt' in value)) {
+      const range = value as { __gt?: Date; __lt?: Date };
+      result[key] = {
+        ...(range.__gt ? { gt: range.__gt } : {}),
+        ...(range.__lt ? { lt: range.__lt } : {}),
+      };
+    } else {
+      result[key] = value;
+    }
+  }
+  return result;
+};
+
+const toPrismaOrder = (order: QueryOptions['order']): unknown => {
+  if (!order) return undefined;
+  return Object.entries(order).map(([field, direction]) => ({
+    [field]: direction.toLowerCase(),
+  }));
+};
+
+class PrismaRepository<T extends { id: string }> {
+  public constructor(private readonly delegate: PrismaDelegate<T>) {}
+
+  public create(data: Partial<T>): T {
+    return { ...data } as T;
+  }
+
+  public async save(entity: T): Promise<T>;
+  public async save(entity: T[]): Promise<T[]>;
+  public async save(entity: T | T[]): Promise<T | T[]> {
+    if (Array.isArray(entity)) {
+      await this.delegate.createMany({ data: entity });
+      return entity;
+    }
+
+    const created = await this.delegate.create({ data: entity });
+    Object.assign(entity, created);
+    return entity;
+  }
+
+  public async findOne(options: QueryOptions): Promise<T | null> {
+    return this.delegate.findFirst({
+      where: toPrismaWhere(options.where),
+      orderBy: toPrismaOrder(options.order),
+    });
+  }
+
+  public async find(options: QueryOptions = {}): Promise<T[]> {
+    return this.delegate.findMany({
+      where: toPrismaWhere(options.where),
+      orderBy: toPrismaOrder(options.order),
+      take: options.take,
+      skip: options.skip,
+    });
+  }
+
+  public async findAndCount(options: QueryOptions = {}): Promise<[T[], number]> {
+    const where = toPrismaWhere(options.where);
+    const [items, count] = await Promise.all([
+      this.delegate.findMany({
+        where,
+        orderBy: toPrismaOrder(options.order),
+        take: options.take,
+        skip: options.skip,
+      }),
+      this.delegate.count({ where }),
+    ]);
+    return [items, count];
+  }
+
+  public async update(criteria: string | Record<string, unknown>, data: Partial<T>): Promise<void> {
+    await this.delegate.updateMany({
+      where: typeof criteria === 'string' ? { id: criteria } : toPrismaWhere(criteria),
+      data,
+    });
+  }
+
+  public async delete(criteria: string | Record<string, unknown>): Promise<void> {
+    await this.delegate.deleteMany({
+      where: typeof criteria === 'string' ? { id: criteria } : toPrismaWhere(criteria),
+    });
+  }
+}
+
+export type { User, OAuthAccount, Session, PasswordResetToken, EmailVerificationToken, Shop, VendorStory, WishlistItem, SizeChart, SellerEarnings, Payout, Product, Inventory, ProductVariation, Order, OrderItem, ReturnRequest, Payment, Notification, Review, Message, ContentPage, Asset, Coupon } from './database.types';
+
+export const contains = (value: string): { __contains: string } => ({ __contains: value });
+export const greaterThan = (value: Date): { __gt: Date } => ({ __gt: value });
+export const lessThan = (value: Date): { __lt: Date } => ({ __lt: value });
+
+export const getUserRepository = () => new PrismaRepository<User>(prisma.users as unknown as PrismaDelegate<User>);
+export const getOAuthAccountRepository = () => new PrismaRepository<OAuthAccount>(prisma.oauth_accounts as unknown as PrismaDelegate<OAuthAccount>);
+export const getSessionRepository = () => new PrismaRepository<Session>(prisma.sessions as unknown as PrismaDelegate<Session>);
+export const getPasswordResetTokenRepository = () => new PrismaRepository<PasswordResetToken>(prisma.password_reset_tokens as unknown as PrismaDelegate<PasswordResetToken>);
+export const getEmailVerificationTokenRepository = () => new PrismaRepository<EmailVerificationToken>(prisma.email_verification_tokens as unknown as PrismaDelegate<EmailVerificationToken>);
+export const getShopRepository = () => new PrismaRepository<Shop>(prisma.shops as unknown as PrismaDelegate<Shop>);
+export const getVendorStoryRepository = () => new PrismaRepository<VendorStory>(prisma.vendor_stories as unknown as PrismaDelegate<VendorStory>);
+export const getWishlistRepository = () => new PrismaRepository<WishlistItem>(prisma.wishlist_items as unknown as PrismaDelegate<WishlistItem>);
+export const getSizeChartRepository = () => new PrismaRepository<SizeChart>(prisma.size_charts as unknown as PrismaDelegate<SizeChart>);
+export const getSellerEarningsRepository = () => new PrismaRepository<SellerEarnings>(prisma.seller_earnings as unknown as PrismaDelegate<SellerEarnings>);
+export const getPayoutRepository = () => new PrismaRepository<Payout>(prisma.payouts as unknown as PrismaDelegate<Payout>);
+export const getProductRepository = () => new PrismaRepository<Product>(prisma.products as unknown as PrismaDelegate<Product>);
+export const getInventoryRepository = () => new PrismaRepository<Inventory>(prisma.inventory as unknown as PrismaDelegate<Inventory>);
+export const getProductVariationRepository = () => new PrismaRepository<ProductVariation>(prisma.product_variations as unknown as PrismaDelegate<ProductVariation>);
+export const getOrderRepository = () => new PrismaRepository<Order>(prisma.orders as unknown as PrismaDelegate<Order>);
+export const getOrderItemRepository = () => new PrismaRepository<OrderItem>(prisma.order_items as unknown as PrismaDelegate<OrderItem>);
+export const getReturnRequestRepository = () => new PrismaRepository<ReturnRequest>(prisma.return_requests as unknown as PrismaDelegate<ReturnRequest>);
+export const getPaymentRepository = () => new PrismaRepository<Payment>(prisma.payments as unknown as PrismaDelegate<Payment>);
+export const getNotificationRepository = () => new PrismaRepository<Notification>(prisma.notifications as unknown as PrismaDelegate<Notification>);
+export const getReviewRepository = () => new PrismaRepository<Review>(prisma.reviews as unknown as PrismaDelegate<Review>);
+export const getMessageRepository = () => new PrismaRepository<Message>(prisma.messages as unknown as PrismaDelegate<Message>);
+export const getAssetRepository = () => new PrismaRepository<Asset>(prisma.assets as unknown as PrismaDelegate<Asset>);
+export const getCouponRepository = () => new PrismaRepository<Coupon>(prisma.coupons as unknown as PrismaDelegate<Coupon>);
+export const getContentPageRepository = () => new PrismaRepository<ContentPage>(prisma.content_pages as unknown as PrismaDelegate<ContentPage>);
 
 export async function initDatabase(): Promise<void> {
-  if (AppDataSource.isInitialized) return;
-  try {
-    await AppDataSource.initialize();
-  } catch (error) {
-    logger.error({ err: error }, 'Database connection failed');
-    throw error;
-  }
-  logger.info('Database connected');
+  await prisma.$connect();
 }
 
 export async function closeDatabase(): Promise<void> {
-  if (AppDataSource.isInitialized) await AppDataSource.destroy();
+  await prisma.$disconnect();
 }
 
-export const getUserRepository = () => AppDataSource.getRepository(User);
-export const getOAuthAccountRepository = () => AppDataSource.getRepository(OAuthAccount);
-export const getSessionRepository = () => AppDataSource.getRepository(Session);
-export const getPasswordResetTokenRepository = () => AppDataSource.getRepository(PasswordResetToken);
-export const getEmailVerificationTokenRepository = () => AppDataSource.getRepository(EmailVerificationToken);
-export const getShopRepository = () => AppDataSource.getRepository(Shop);
-export const getSizeChartRepository = () => AppDataSource.getRepository(SizeChart);
-export const getSellerEarningsRepository = () => AppDataSource.getRepository(SellerEarnings);
-export const getPayoutRepository = () => AppDataSource.getRepository(Payout);
-export const getProductRepository = () => AppDataSource.getRepository(Product);
-export const getInventoryRepository = () => AppDataSource.getRepository(Inventory);
-export const getProductVariationRepository = () => AppDataSource.getRepository(ProductVariation);
-export const getOrderRepository = () => AppDataSource.getRepository(Order);
-export const getOrderItemRepository = () => AppDataSource.getRepository(OrderItem);
-export const getReturnRequestRepository = () => AppDataSource.getRepository(ReturnRequest);
-export const getPaymentRepository = () => AppDataSource.getRepository(Payment);
-export const getNotificationRepository = () => AppDataSource.getRepository(Notification);
-export const getReviewRepository = () => AppDataSource.getRepository(Review);
-export const getPool = () => AppDataSource.manager;
+export const getPool = () => ({
+  query: async (sql: string, parameters: unknown[]): Promise<Array<Record<string, string>>> =>
+    prisma.$queryRawUnsafe<Array<Record<string, string>>>(sql, ...parameters),
+});

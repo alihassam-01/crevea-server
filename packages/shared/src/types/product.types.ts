@@ -33,6 +33,9 @@ export interface IProduct {
   images: string[];
   price: number;
   compareAtPrice?: number;
+  salePercent: number;
+  saleStartsAt?: Date;
+  saleEndsAt?: Date;
   currency: string;
   sku?: string;
   weight?: number; // in grams

@@ -8,11 +8,13 @@ export const getCart = async (userId: string) => {
 };
 
 export const addItem = async (userId: string, item: any) => {
-  if (!item.shopId) {
-    const product = await productService.findById(item.productId);
-    if (!product) throw new Error('Product not found');
-    item.shopId = product.shopId;
-  }
+  const product = await productService.findById(item.productId);
+  if (!product) throw new Error('Product not found');
+  // Never trust pricing or shop ownership metadata sent by the browser.
+  item.shopId = product.shopId;
+  item.price = product.price;
+  item.productName = product.name;
+  item.productImage = product.images?.[0];
 
   const cart = await cartService.addItem(userId, item);
   return successResponse(cart);

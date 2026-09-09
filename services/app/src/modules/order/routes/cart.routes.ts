@@ -10,7 +10,8 @@ export const addItemSchema = z.object({
   quantity: z.number().int().positive(),
   price: z.number().positive(),
   productName: z.string(),
-  productImage: z.string().url().optional(),
+  // Product images may be hosted externally or use a same-origin placeholder.
+  productImage: z.string().optional(),
 });
 
 export default async function cartRoutes(server: FastifyInstance) {

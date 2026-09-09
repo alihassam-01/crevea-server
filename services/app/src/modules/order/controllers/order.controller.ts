@@ -1,7 +1,8 @@
 import { successResponse, NotFoundError, AuthorizationError, paginatedResponse } from '@crevea/shared';
-import { OrderStatus } from '@crevea/shared';
+import { OrderStatus, PaymentMethod, UserRole } from '@crevea/shared';
 import * as orderService from '../services/order.service';
 import * as cartService from '../services/cart.service';
+import * as couponService from '../../promotion/services/coupon.service';
 
 export const createOrder = async (userId: string, data: any) => {
   // Get cart items
@@ -11,6 +12,15 @@ export const createOrder = async (userId: string, data: any) => {
     throw new Error('Cart is empty');
   }
 
+  let discount = 0;
+  if (data.couponCode) {
+    const coupon = await couponService.validateCode(data.couponCode, cart.subtotal);
+    const couponItemsTotal = cart.items.filter(item => item.shopId === coupon.shopId).reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const scopedCoupon = await couponService.validateCode(data.couponCode, couponItemsTotal);
+    discount = Math.min(scopedCoupon.discount, cart.subtotal);
+    await couponService.consume(scopedCoupon.id);
+  }
+
   // Create order
   const order = await orderService.createOrder({
     customerId: userId,
@@ -18,9 +28,10 @@ export const createOrder = async (userId: string, data: any) => {
     shippingAddress: data.shippingAddress,
     subtotal: cart.subtotal,
     tax: 0,
-    shippingCost: 0,
-    discount: 0,
-    total: cart.subtotal,
+    shippingCost: cart.deliveryFee || 0,
+    discount,
+    total: cart.subtotal + (cart.deliveryFee || 0) - discount,
+    paymentMethod: data.paymentMethod as PaymentMethod,
   });
 
   // Clear cart after order creation
@@ -44,16 +55,28 @@ export const getOrder = async (id: string, userId: string) => {
   return successResponse(order);
 };
 
+export const attachPaymentProof = async (id: string, assetId: string, userId: string) => {
+  const order = await orderService.findById(id);
+  if (!order) throw new NotFoundError('Order', id);
+  if (order.customerId !== userId) throw new AuthorizationError('You can only update your own order');
+  const updated = await orderService.attachPaymentProof(id, assetId);
+  return successResponse(updated);
+};
+
 export const getUserOrders = async (userId: string, options: { page: number; limit: number }) => {
   const { orders, total } = await orderService.findByCustomer(userId, options);
   return paginatedResponse(orders, options.page, options.limit, total);
 };
 
-export const updateOrderStatus = async (id: string, status: string, _userId: string) => {
+export const updateOrderStatus = async (id: string, status: string, userId: string, userRole: UserRole) => {
   const order = await orderService.findById(id);
   
   if (!order) {
     throw new NotFoundError('Order', id);
+  }
+
+  if (userRole !== UserRole.EXECUTIVE && order.customerId !== userId) {
+    throw new AuthorizationError('You can only update your own orders');
   }
 
   // Only allow certain status transitions

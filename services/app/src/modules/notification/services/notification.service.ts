@@ -1,5 +1,5 @@
 import { getNotificationRepository } from '../../../database';
-import { Notification } from '../entities';
+import { Notification } from '../../../database';
 import { INotification, NotificationType, getEventBus } from '@crevea/shared';
 import { EventType, IEvent } from '@crevea/shared';
 import { v4 as uuidv4 } from 'uuid';

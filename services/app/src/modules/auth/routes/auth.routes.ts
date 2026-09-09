@@ -45,6 +45,11 @@ const resetPasswordSchema = z.object({
   password: passwordSchema,
 });
 
+const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1),
+  newPassword: passwordSchema,
+});
+
 /**
  * Verify email schema
  */
@@ -64,6 +69,28 @@ const mfaEnableSchema = z.object({
  */
 const mfaVerifySchema = z.object({
   token: z.string().length(6),
+});
+
+const savedAddressSchema = z.object({
+  firstName: z.string().trim().min(1).max(100),
+  lastName: z.string().trim().min(1).max(100),
+  email: emailSchema,
+  phone: z.string().trim().regex(/^\+?[0-9\s().-]{7,20}$/),
+  street: z.string().trim().min(1).max(200),
+  apartment: z.string().trim().max(100).optional(),
+  city: z.string().trim().min(1).max(100),
+  state: z.string().trim().min(1).max(100),
+  country: z.string().trim().min(1).max(100),
+  postalCode: z.string().trim().min(1).max(30),
+});
+
+const updateProfileSchema = z.object({
+  avatar: z.string().url().optional(),
+  savedAddresses: z.array(savedAddressSchema).max(10).optional(),
+  vendorOnboarding: z.object({
+    status: z.enum(['PENDING', 'APPROVED', 'REJECTED']),
+    documents: z.array(z.string().uuid()).length(3),
+  }).optional(),
 });
 
 /**
@@ -111,6 +138,17 @@ export default async function authRoutes(server: FastifyInstance) {
     return reply.send({ success: true, message: 'Password reset successful' });
   });
 
+  // Change password for an authenticated user. Password verification happens on the server.
+  server.post('/change-password', { preHandler: authenticate }, async (request, reply) => {
+    const data = validate(changePasswordSchema, request.body);
+    const result = await authController.changePassword(
+      request.user!.userId,
+      data.currentPassword,
+      data.newPassword,
+    );
+    return reply.send(result);
+  });
+
   // Verify email
   server.post('/verify-email', async (request, reply) => {
     const data = validate(verifyEmailSchema, request.body);
@@ -141,6 +179,12 @@ export default async function authRoutes(server: FastifyInstance) {
   // Get current user
   server.get('/me', { preHandler: authenticate }, async (request, reply) => {
     const user = await authController.getCurrentUser(request.user!.userId);
+    return reply.send({ success: true, data: user });
+  });
+
+  server.put('/me', { preHandler: authenticate }, async (request, reply) => {
+    const data = validate(updateProfileSchema, request.body);
+    const user = await authController.updateCurrentUser(request.user!.userId, data);
     return reply.send({ success: true, data: user });
   });
 }

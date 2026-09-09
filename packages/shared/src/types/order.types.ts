@@ -83,6 +83,7 @@ export interface ICart {
   userId: string;
   items: ICartItem[];
   subtotal: number;
+  deliveryFee?: number;
   updatedAt: Date;
 }
 

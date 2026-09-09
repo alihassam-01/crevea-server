@@ -71,7 +71,7 @@ export const sanitizeStringArray = (arr: string[]): string[] => {
 
 /**
  * Remove dangerous characters from SQL-like inputs
- * Note: TypeORM handles parameterization, but this adds extra safety
+ * Note: Prisma handles parameterization, but this adds extra safety
  */
 export const sanitizeSqlInput = (input: string): string => {
   if (!input) return '';

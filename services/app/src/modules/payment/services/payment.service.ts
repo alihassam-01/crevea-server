@@ -170,9 +170,9 @@ const mapPaymentToInterface = (payment: Payment): IPayment => {
     method: payment.method,
     status: payment.status,
     gatewayTransactionId: payment.gatewayTransactionId,
-    gatewayResponse: payment.gatewayResponse,
+    gatewayResponse: payment.gatewayResponse as import('@crevea/shared').JsonObject | undefined,
     failureReason: payment.failureReason,
-    metadata: payment.metadata,
+    metadata: payment.metadata as import('@crevea/shared').JsonObject | undefined,
     createdAt: payment.createdAt,
     updatedAt: payment.updatedAt,
   };

@@ -47,6 +47,10 @@ export interface IShop {
   verificationDocuments?: string[];
   verificationNotes?: string;
   commissionRate: number; // Platform commission (0-1)
+  deliveryFee: number;
+  salePercent: number;
+  saleStartsAt?: Date;
+  saleEndsAt?: Date;
   rating: number;
   totalReviews: number;
   totalSales: number;

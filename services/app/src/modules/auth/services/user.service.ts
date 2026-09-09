@@ -2,7 +2,6 @@ import { getUserRepository, getOAuthAccountRepository, User } from '../../../dat
 import { UserRole, UserStatus, OAuthProvider, IUser } from '@crevea/shared';
 import { comparePassword } from '@crevea/shared';
 import { sanitizeEmail } from '@crevea/shared';
-import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 
 interface CreateUserData {
   email: string;
@@ -77,7 +76,7 @@ export const updateUser = async (id: string, data: Partial<User>): Promise<IUser
   await userRepo.update(id, {
     ...data,
     updatedAt: new Date(),
-  } as QueryDeepPartialEntity<User>);
+  });
 
   const user = await userRepo.findOne({ where: { id } });
   if (!user) throw new Error('User not found');
@@ -224,6 +223,9 @@ const mapUserToInterface = (user: User): IUser => {
     phoneVerified: false, // Not implemented yet
     mfaEnabled: user.mfaEnabled,
     mfaSecret: user.mfaSecret,
+    preferences: user.preferences && typeof user.preferences === 'object' && !Array.isArray(user.preferences)
+      ? user.preferences as Record<string, unknown>
+      : undefined,
     passwordHash: user.passwordHash,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,

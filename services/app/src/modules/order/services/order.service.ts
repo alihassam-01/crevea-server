@@ -1,5 +1,5 @@
-import { getOrderRepository, getOrderItemRepository, Order } from '../../../database';
-import { OrderStatus, IOrder, getEventBus } from '@crevea/shared';
+import { getOrderRepository, getOrderItemRepository, getShopRepository, Order } from '../../../database';
+import { OrderStatus, IOrder, getEventBus, PaymentMethod } from '@crevea/shared';
 import { EventType, IEvent } from '@crevea/shared';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -20,7 +20,13 @@ interface CreateOrderData {
   shippingCost: number;
   discount: number;
   total: number;
+  paymentMethod: PaymentMethod;
 }
+
+const getVendorIdsForItems = async (items: Array<{ shopId: string }>): Promise<string[]> => {
+  const shops = await getShopRepository().find({ where: items.map(item => ({ id: item.shopId })) });
+  return [...new Set(shops.map(shop => shop.sellerId))];
+};
 
 export const createOrder = async (data: CreateOrderData): Promise<IOrder> => {
   const orderRepo = getOrderRepository();
@@ -40,6 +46,7 @@ export const createOrder = async (data: CreateOrderData): Promise<IOrder> => {
     total: data.total,
     status: OrderStatus.PENDING,
     shippingAddress: data.shippingAddress,
+    metadata: { paymentMethod: data.paymentMethod },
   });
 
   await orderRepo.save(order);
@@ -60,6 +67,7 @@ export const createOrder = async (data: CreateOrderData): Promise<IOrder> => {
   );
 
   await orderItemRepo.save(orderItems);
+  const vendorIds = await getVendorIdsForItems(data.items);
 
   // Publish event
   const event: IEvent = {
@@ -70,6 +78,14 @@ export const createOrder = async (data: CreateOrderData): Promise<IOrder> => {
       orderId: order.id,
       customerId: data.customerId,
       total: data.total,
+      paymentMethod: data.paymentMethod,
+      vendorIds,
+      items: data.items.map(item => ({
+        productId: item.productId,
+        shopId: item.shopId,
+        quantity: item.quantity,
+        price: item.price,
+      })),
     },
   };
   await getEventBus().publish(event);
@@ -88,6 +104,20 @@ export const findById = async (id: string): Promise<IOrder | null> => {
   const items = await orderItemRepo.find({ where: { orderId: id } });
   
   return mapOrderToInterface(order, items);
+};
+
+export const attachPaymentProof = async (id: string, assetId: string): Promise<IOrder | null> => {
+  const orderRepo = getOrderRepository();
+  const order = await orderRepo.findOne({ where: { id } });
+  if (!order) return null;
+  const metadata = (order.metadata && typeof order.metadata === 'object' && !Array.isArray(order.metadata))
+    ? order.metadata as Record<string, unknown>
+    : {};
+  await orderRepo.update(id, {
+    metadata: { ...metadata, paymentProofAssetId: assetId },
+    updatedAt: new Date(),
+  });
+  return findById(id);
 };
 
 export const findByCustomer = async (
@@ -140,21 +170,27 @@ export const updateStatus = async (id: string, status: OrderStatus): Promise<IOr
 
   // Load order items
   const items = await orderItemRepo.find({ where: { orderId: id } });
+  const vendorIds = await getVendorIdsForItems(items);
 
   // Publish event
-  const eventType = status === OrderStatus.CONFIRMED
-    ? EventType.ORDER_CONFIRMED
-    : status === OrderStatus.SHIPPED
-    ? EventType.ORDER_SHIPPED
-    : status === OrderStatus.DELIVERED
-    ? EventType.ORDER_DELIVERED
-    : EventType.ORDER_CANCELLED;
+  const eventTypeByStatus: Partial<Record<OrderStatus, EventType>> = {
+    [OrderStatus.PROCESSING]: EventType.ORDER_CONFIRMED,
+    [OrderStatus.CONFIRMED]: EventType.ORDER_CONFIRMED,
+    [OrderStatus.PACKED]: EventType.ORDER_PACKED,
+    [OrderStatus.SHIPPED]: EventType.ORDER_SHIPPED,
+    [OrderStatus.DELIVERED]: EventType.ORDER_DELIVERED,
+    [OrderStatus.COMPLETED]: EventType.ORDER_COMPLETED,
+    [OrderStatus.CANCELLED]: EventType.ORDER_CANCELLED,
+  };
+  const eventType = eventTypeByStatus[status];
+
+  if (!eventType) return mapOrderToInterface(order, items);
 
   const event: IEvent = {
     id: uuidv4(),
     type: eventType,
     timestamp: new Date(),
-    payload: { orderId: id, status },
+  payload: { orderId: id, status, customerId: order.customerId, vendorIds },
   };
   await getEventBus().publish(event);
 
@@ -191,7 +227,7 @@ const mapOrderToInterface = (order: Order, items: any[] = []): IOrder => {
     shippingAddress: order.shippingAddress as any,
     trackingNumber: order.trackingNumber,
     currency: 'USD',
-    paymentMethod: 'card',
+    paymentMethod: (order.metadata as any)?.paymentMethod || 'CARD',
     createdAt: order.createdAt,
     updatedAt: order.updatedAt,
   };

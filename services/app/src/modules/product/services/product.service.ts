@@ -1,9 +1,8 @@
-import { getProductRepository, getProductVariationRepository, Product } from '../../../database';
+import { getProductRepository, getProductVariationRepository, getShopRepository, Product, Shop, contains } from '../../../database';
 import { ProductStatus, ProductType, IProduct, getEventBus } from '@crevea/shared';
 import { EventType, IEvent } from '@crevea/shared';
 import { v4 as uuidv4 } from 'uuid';
 import { sanitizeHtml, sanitizeText } from '@crevea/shared';
-import { Like } from 'typeorm';
 
 // Simple slugify utility: lowercases, removes diacritics, non-alphanumerics -> hyphens
 const slugify = (text: string): string => {
@@ -47,6 +46,9 @@ interface CreateProductData {
   images?: string[];
   price: number;
   compareAtPrice?: number;
+  salePercent?: number;
+  saleStartsAt?: Date | null;
+  saleEndsAt?: Date | null;
   sku?: string;
   weight?: number;
   dimensions?: any;
@@ -70,12 +72,18 @@ export const create = async (data: CreateProductData): Promise<IProduct> => {
     description: sanitizedDescription,
     shortDescription: sanitizedShortDescription,
     type: data.type,
-    status: ProductStatus.DRAFT,
+    // Product creation is the publish action in the current vendor UI. The
+    // form sends ACTIVE, but the API schema intentionally controls this value
+    // so new products must not remain invisible as DRAFT records.
+    status: ProductStatus.ACTIVE,
     category: data.category.toUpperCase(),
     tags: (data.tags || []).map(t => t.toLowerCase()),
     images: data.images || [],
     price: data.price,
     compareAtPrice: data.compareAtPrice,
+    salePercent: data.salePercent || 0,
+    saleStartsAt: data.saleStartsAt || undefined,
+    saleEndsAt: data.saleEndsAt || undefined,
     currency: 'ZAR',
     sku: data.sku,
     weight: data.weight,
@@ -109,13 +117,15 @@ export const create = async (data: CreateProductData): Promise<IProduct> => {
 export const findById = async (id: string): Promise<IProduct | null> => {
   const productRepo = getProductRepository();
   const product = await productRepo.findOne({ where: { id } });
-  return product ? mapProductToInterface(product) : null;
+  const shop = product ? await getShopRepository().findOne({ where: { id: product.shopId } }) : null;
+  return product ? mapProductToInterface(product, shop || undefined) : null;
 };
 
 export const findBySlug = async (slug: string): Promise<IProduct | null> => {
   const productRepo = getProductRepository();
   const product = await productRepo.findOne({ where: { slug } });
-  return product ? mapProductToInterface(product) : null;
+  const shop = product ? await getShopRepository().findOne({ where: { id: product.shopId } }) : null;
+  return product ? mapProductToInterface(product, shop || undefined) : null;
 };
 
 export const findByShop = async (
@@ -133,8 +143,9 @@ export const findByShop = async (
     skip,
   });
 
+  const shop = await getShopRepository().findOne({ where: { id: shopId } });
   return {
-    products: products.map(mapProductToInterface),
+    products: products.map(product => mapProductToInterface(product, shop || undefined)),
     total,
   };
 };
@@ -149,17 +160,19 @@ export const search = async (
 
   const [products, total] = await productRepo.findAndCount({
     where: [
-      { name: Like(`%${query}%`) },
-      { description: Like(`%${query}%`) },
-      { category: Like(`%${query}%`) },
+      { name: contains(query) },
+      { description: contains(query) },
+      { category: contains(query) },
     ],
     order: { createdAt: 'DESC' },
     take: limit,
     skip,
   });
 
+  const shops = await getShopRepository().find({ where: [...new Set(products.map(product => product.shopId))].map(id => ({ id })) });
+  const shopsById = new Map(shops.map(shop => [shop.id, shop]));
   return {
-    products: products.map(mapProductToInterface),
+    products: products.map(product => mapProductToInterface(product, shopsById.get(product.shopId))),
     total,
   };
 };
@@ -177,23 +190,28 @@ export const list = async (options: {
   const { page, limit, category, status, search, minPrice, maxPrice } = options;
   const skip = (page - 1) * limit;
 
-  const qb = productRepo.createQueryBuilder('product');
-  
-  if (category) qb.andWhere('product.category = :category', { category });
-  if (status) qb.andWhere('product.status = :status', { status });
-  if (minPrice) qb.andWhere('product.price >= :minPrice', { minPrice });
-  if (maxPrice) qb.andWhere('product.price <= :maxPrice', { maxPrice });
+  const where: Record<string, unknown> = {};
+  if (category) where.category = category;
+  if (status) where.status = status;
+  if (minPrice !== undefined) where.price = { ...(where.price as object), __gt: minPrice };
+  if (maxPrice !== undefined) where.price = { ...(where.price as object), __lt: maxPrice };
   if (search) {
-    qb.andWhere('(product.name ILIKE :search OR product.description ILIKE :search)', { search: `%${search}%` });
+    where.OR = [
+      { name: contains(search) },
+      { description: contains(search) },
+    ];
   }
 
-  qb.orderBy('product.createdAt', 'DESC');
-  qb.skip(skip).take(limit);
-
-  const [products, total] = await qb.getManyAndCount();
-
+  const [products, total] = await productRepo.findAndCount({
+    where,
+    order: { createdAt: 'DESC' },
+    skip,
+    take: limit,
+  });
+  const shops = await getShopRepository().find({ where: [...new Set(products.map(product => product.shopId))].map(id => ({ id })) });
+  const shopsById = new Map(shops.map(shop => [shop.id, shop]));
   return {
-    products: products.map(mapProductToInterface),
+    products: products.map(product => mapProductToInterface(product, shopsById.get(product.shopId))),
     total,
   };
 };
@@ -256,7 +274,13 @@ export const deleteProduct = async (id: string): Promise<void> => {
   await getEventBus().publish(event);
 };
 
-const mapProductToInterface = (product: Product): IProduct => {
+const mapProductToInterface = (product: Product, shop?: Shop): IProduct => {
+  const now = Date.now();
+  const productSaleActive = Number(product.salePercent) > 0 && (!product.saleStartsAt || product.saleStartsAt.getTime() <= now) && (!product.saleEndsAt || product.saleEndsAt.getTime() >= now);
+  const shopSaleActive = Boolean(shop) && Number(shop?.salePercent) > 0 && (!shop?.saleStartsAt || shop.saleStartsAt.getTime() <= now) && (!shop?.saleEndsAt || shop.saleEndsAt.getTime() >= now);
+  const salePercent = productSaleActive ? Number(product.salePercent) : (shopSaleActive ? Number(shop!.salePercent) : 0);
+  const basePrice = parseFloat(product.price.toString());
+  const salePrice = salePercent ? Number((basePrice * (1 - salePercent / 100)).toFixed(2)) : basePrice;
   return {
     id: product.id,
     shopId: product.shopId,
@@ -269,8 +293,11 @@ const mapProductToInterface = (product: Product): IProduct => {
     category: product.category,
     tags: product.tags,
     images: product.images,
-    price: parseFloat(product.price.toString()),
-    compareAtPrice: product.compareAtPrice ? parseFloat(product.compareAtPrice.toString()) : undefined,
+    price: salePrice,
+    compareAtPrice: product.compareAtPrice ? parseFloat(product.compareAtPrice.toString()) : (salePercent ? basePrice : undefined),
+    salePercent: parseFloat(product.salePercent.toString()),
+    saleStartsAt: product.saleStartsAt,
+    saleEndsAt: product.saleEndsAt,
     currency: product.currency || 'ZAR',
     sku: product.sku,
     weight: product.weight,
