@@ -1,9 +1,14 @@
-import { successResponse } from '@crevea/shared';
+import { paginatedResponse, successResponse } from '@crevea/shared';
 import * as payoutService from '../../shop/services/payout.service';
 import * as commissionService from '../../shop/services/commission.service';
 
 export const getPendingPayouts = async () => {
   return successResponse(await payoutService.getPendingPayouts());
+};
+
+export const getPayouts = async (filters: { page: number; limit: number; status?: string }) => {
+  const result = await payoutService.getPayouts(filters);
+  return paginatedResponse(result.items, result.page, result.limit, result.total);
 };
 
 export const approvePayout = async (payoutId: string, data: { approvedAmount: number; notes?: string }, adminId: string) => {

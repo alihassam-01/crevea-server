@@ -65,7 +65,7 @@ export const authorize = (...roles: UserRole[]) => {
       throw new AuthenticationError('User not authenticated');
     }
 
-    if (!roles.includes(request.user.role)) {
+    if (!Object.values(UserRole).includes(request.user.role) || !roles.includes(request.user.role)) {
       throw new AuthorizationError(
         `Access denied. Required roles: ${roles.join(', ')}`
       );
@@ -82,7 +82,7 @@ export const requirePermission = (...permissions: Permission[]) => {
       throw new AuthenticationError('User not authenticated');
     }
 
-    const userPermissions = ROLE_PERMISSIONS[request.user.role];
+    const userPermissions = ROLE_PERMISSIONS[request.user.role] ?? [];
     
     const hasPermission = permissions.every(permission =>
       userPermissions.includes(permission)

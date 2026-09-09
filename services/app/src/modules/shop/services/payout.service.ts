@@ -54,6 +54,10 @@ export const approvePayout = async (
     throw new Error('Only pending payouts can be approved');
   }
 
+  if (approvedAmount > Number(payout.requestedAmount)) {
+    throw new Error('Approved amount cannot exceed the requested amount');
+  }
+
   await payoutRepo.update(payoutId, {
     status: 'APPROVED',
     approvedAmount,
@@ -73,6 +77,10 @@ export const rejectPayout = async (payoutId: string, reason: string): Promise<vo
 
   const payout = await payoutRepo.findOne({ where: { id: payoutId } });
   if (!payout) throw new Error('Payout not found');
+
+  if (payout.status !== 'PENDING') {
+    throw new Error('Only pending payouts can be rejected');
+  }
 
   await payoutRepo.update(payoutId, {
     status: 'REJECTED',
@@ -110,6 +118,24 @@ export const getPendingPayouts = async (): Promise<IPayout[]> => {
   });
 
   return payouts.map(mapPayoutToInterface);
+};
+
+export const getPayouts = async (filters: { page: number; limit: number; status?: string }) => {
+  const payoutRepo = getPayoutRepository();
+  const where = filters.status ? { status: filters.status } : {};
+  const [payouts, total] = await payoutRepo.findAndCount({
+    where,
+    order: { requestedAt: 'DESC' },
+    skip: (filters.page - 1) * filters.limit,
+    take: filters.limit,
+  });
+  return {
+    items: payouts.map(mapPayoutToInterface),
+    page: filters.page,
+    limit: filters.limit,
+    total,
+    totalPages: Math.ceil(total / filters.limit),
+  };
 };
 
 const mapPayoutToInterface = (payout: Payout): IPayout => {
