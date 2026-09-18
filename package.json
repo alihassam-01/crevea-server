@@ -17,6 +17,7 @@
     "db:deploy": "npm run db:deploy --workspace=@crevea/app",
     "db:status": "npm run db:status --workspace=@crevea/app",
     "db:seed:admin": "tsx scripts/seed-admin.ts",
+    "db:seed:products": "tsx scripts/seed-products.ts",
     "test": "echo 'No tests configured yet'",
     "lint": "echo 'No lint script configured yet'",
     "clean": "rm -rf dist"

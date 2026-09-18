@@ -4,7 +4,7 @@
   "private": true,
   "description": "Crevea modular monolith application",
   "scripts": {
-    "dev": "DOTENV_CONFIG_PATH=../../.env tsx watch src/index.ts",
+    "dev": "cross-env DOTENV_CONFIG_PATH=../../.env tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/app/src/index.js",
     "db:generate": "prisma generate --config=../../prisma.config.ts",
@@ -38,6 +38,7 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
+    "cross-env": "^10.1.0",
     "prisma": "^7.9.1",
     "tsx": "^4.7.0",
     "typescript": "^5.3.3"

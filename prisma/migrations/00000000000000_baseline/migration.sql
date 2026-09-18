@@ -1,5 +1,6 @@
 -- CreateSchema
 CREATE SCHEMA IF NOT EXISTS "public";
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- CreateTable
 CREATE TABLE "email_verification_tokens" (
     "id" UUID NOT NULL DEFAULT uuid_generate_v4(),
