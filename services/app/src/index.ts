@@ -40,6 +40,20 @@ export async function buildServer() {
   await server.register(helmet, { contentSecurityPolicy: false });
   await server.register(websocket);
 
+  server.addContentTypeParser('application/json', { parseAs: 'string' }, (_req, body: string | Buffer, done) => {
+    const raw = typeof body === 'string' ? body : body.toString('utf-8');
+    if (!raw || raw.trim() === '') {
+      done(null, undefined);
+      return;
+    }
+    try {
+      done(null, JSON.parse(raw));
+    } catch (err: any) {
+      err.statusCode = 400;
+      done(err, undefined);
+    }
+  });
+
   server.get('/health', async () => ({ status: 'ok', service: 'crevea', timestamp: new Date().toISOString() }));
 
   await server.register(authRoutes, { prefix: '/api/auth' });

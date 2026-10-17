@@ -237,12 +237,14 @@ export const getCurrentUser = async (userId: string) => {
   return userService.sanitizeUser(user);
 };
 
-export const updateCurrentUser = async (userId: string, data: { avatar?: string; savedAddresses?: JsonValue[]; vendorOnboarding?: JsonValue }) => {
+export const updateCurrentUser = async (userId: string, data: { firstName?: string; lastName?: string; avatar?: string; savedAddresses?: JsonValue[]; vendorOnboarding?: JsonValue }) => {
   const existing = await userService.findById(userId);
   const existingPreferences = existing?.preferences && typeof existing.preferences === 'object' && !Array.isArray(existing.preferences)
     ? existing.preferences as Record<string, unknown>
     : {};
   const user = await userService.updateUser(userId, {
+    ...(data.firstName !== undefined ? { firstName: data.firstName.trim() } : {}),
+    ...(data.lastName !== undefined ? { lastName: data.lastName.trim() } : {}),
     ...(data.avatar ? { avatar: data.avatar } : {}),
     ...(data.savedAddresses ? { preferences: { ...existingPreferences, savedAddresses: data.savedAddresses } } : {}),
     ...(data.vendorOnboarding ? { preferences: { ...existingPreferences, ...(data.savedAddresses ? { savedAddresses: data.savedAddresses } : {}), vendorOnboarding: data.vendorOnboarding } } : {}),

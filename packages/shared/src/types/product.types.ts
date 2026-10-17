@@ -46,6 +46,7 @@ export interface IProduct {
   totalSales: number;
   isFeatured: boolean;
   sizeChartId?: string;
+  stock?: number;
   createdAt: Date;
   updatedAt: Date;
 }

@@ -1,4 +1,4 @@
-import { successResponse, NotFoundError, AuthorizationError, ConflictError, ValidationError } from '@crevea/shared';
+﻿import { successResponse, NotFoundError, AuthorizationError, ConflictError, ValidationError } from '@crevea/shared';
 import { getUserRepository } from '../../../database';
 import * as shopService from '../services/shop.service';
 import * as analyticsService from '../services/analytics.service';
@@ -65,14 +65,22 @@ export const deleteShop = async (id: string, userId: string) => {
 };
 
 export const listShops = async (query: any) => {
-  const { page = 1, limit = 20, category, status, search } = query;
-  const result = await shopService.search(query.search || '', {
+  const { page = 1, limit = 20, category, status, search, isVerified, sortBy } = query;
+  
+  const options: any = {
     page: parseInt(String(page)),
     limit: parseInt(String(limit)),
     category,
     status,
     search,
-  });
+    sortBy,
+  };
+
+  if (isVerified === 'true') {
+    options.verificationStatus = 'APPROVED';
+  }
+
+  const result = await shopService.search(query.search || '', options);
   return result;
 };
 
@@ -124,3 +132,4 @@ export const getSellerShops = async (sellerId: string) => {
   const shops = await shopService.findBySeller(sellerId);
   return successResponse(shops);
 };
+

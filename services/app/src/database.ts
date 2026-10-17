@@ -47,12 +47,16 @@ const toPrismaWhere = (where: QueryOptions['where']): unknown => {
     if (value && typeof value === 'object' && '__contains' in value) {
       result[key] = { contains: (value as { __contains: string }).__contains, mode: 'insensitive' };
     } else if (value && typeof value === 'object' && '__in' in value) {
-      result[key] = { in: (value as { __in: string[] }).__in };
-    } else if (value && typeof value === 'object' && ('__gt' in value || '__lt' in value)) {
-      const range = value as { __gt?: Date; __lt?: Date };
+      result[key] = { in: (value as { __in: unknown[] }).__in };
+    } else if (value && typeof value === 'object' && '__has' in value) {
+      result[key] = { has: (value as { __has: unknown }).__has };
+    } else if (value && typeof value === 'object' && ('__gt' in value || '__lt' in value || '__gte' in value || '__lte' in value)) {
+      const range = value as { __gt?: unknown; __lt?: unknown; __gte?: unknown; __lte?: unknown };
       result[key] = {
-        ...(range.__gt ? { gt: range.__gt } : {}),
-        ...(range.__lt ? { lt: range.__lt } : {}),
+        ...(range.__gt !== undefined ? { gt: range.__gt } : {}),
+        ...(range.__lt !== undefined ? { lt: range.__lt } : {}),
+        ...(range.__gte !== undefined ? { gte: range.__gte } : {}),
+        ...(range.__lte !== undefined ? { lte: range.__lte } : {}),
       };
     } else {
       result[key] = value;
@@ -135,8 +139,12 @@ class PrismaRepository<T extends { id: string }> {
 export type { User, OAuthAccount, Session, PasswordResetToken, EmailVerificationToken, Shop, VendorStory, WishlistItem, SizeChart, SellerEarnings, Payout, Product, Inventory, ProductVariation, Order, OrderItem, ReturnRequest, Payment, Notification, Review, Message, ContentPage, Asset, Coupon } from './database.types';
 
 export const contains = (value: string): { __contains: string } => ({ __contains: value });
-export const greaterThan = (value: Date): { __gt: Date } => ({ __gt: value });
-export const lessThan = (value: Date): { __lt: Date } => ({ __lt: value });
+export const greaterThan = (value: Date | number): { __gt: Date | number } => ({ __gt: value });
+export const lessThan = (value: Date | number): { __lt: Date | number } => ({ __lt: value });
+export const greaterThanOrEqual = (value: Date | number): { __gte: Date | number } => ({ __gte: value });
+export const lessThanOrEqual = (value: Date | number): { __lte: Date | number } => ({ __lte: value });
+export const inList = (values: unknown[]): { __in: unknown[] } => ({ __in: values });
+export const hasItem = (value: unknown): { __has: unknown } => ({ __has: value });
 
 export const getUserRepository = () => new PrismaRepository<User>(prisma.users as unknown as PrismaDelegate<User>);
 export const getOAuthAccountRepository = () => new PrismaRepository<OAuthAccount>(prisma.oauth_accounts as unknown as PrismaDelegate<OAuthAccount>);

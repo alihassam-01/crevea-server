@@ -1,4 +1,4 @@
-import { getProductRepository, getProductVariationRepository, getShopRepository, Product, Shop, contains } from '../../../database';
+import { getProductRepository, getProductVariationRepository, getShopRepository, getInventoryRepository, Product, Shop, contains } from '../../../database';
 import { ProductStatus, ProductType, IProduct, getEventBus } from '@crevea/shared';
 import { EventType, IEvent } from '@crevea/shared';
 import { v4 as uuidv4 } from 'uuid';
@@ -180,21 +180,72 @@ export const search = async (
 export const list = async (options: {
   page: number;
   limit: number;
-  category?: string;
+  category?: string | string[];
   status?: ProductStatus;
   search?: string;
   minPrice?: number;
   maxPrice?: number;
+  sortBy?: string;
+  inStock?: boolean;
+  isHandmade?: boolean;
 }): Promise<{ products: IProduct[]; total: number }> => {
   const productRepo = getProductRepository();
-  const { page, limit, category, status, search, minPrice, maxPrice } = options;
+  const { page, limit, category, status, search, minPrice, maxPrice, sortBy, inStock, isHandmade } = options;
   const skip = (page - 1) * limit;
 
   const where: Record<string, unknown> = {};
-  if (category) where.category = category;
-  if (status) where.status = status;
-  if (minPrice !== undefined) where.price = { ...(where.price as object), __gt: minPrice };
-  if (maxPrice !== undefined) where.price = { ...(where.price as object), __lt: maxPrice };
+  if (category) {
+    const rawCategories = Array.isArray(category)
+      ? category
+      : String(category).split(',').map(c => c.trim()).filter(Boolean);
+
+    if (rawCategories.length > 0) {
+      const allCategoryVariants = new Set<string>();
+      for (const cat of rawCategories) {
+        const lower = cat.toLowerCase();
+        if (['crochet', 'crochets'].includes(lower)) {
+          allCategoryVariants.add('Crochet');
+          allCategoryVariants.add('CROCHET');
+          allCategoryVariants.add('crochet');
+        } else if (['art', 'arts'].includes(lower)) {
+          allCategoryVariants.add('Art');
+          allCategoryVariants.add('ART');
+          allCategoryVariants.add('art');
+        } else if (['painting', 'paintings'].includes(lower)) {
+          allCategoryVariants.add('Painting');
+          allCategoryVariants.add('PAINTING');
+          allCategoryVariants.add('painting');
+        } else if (['handcraft', 'handcrafts', 'handicraft', 'handicrafts', 'craft', 'crafts'].includes(lower)) {
+          allCategoryVariants.add('Handcraft');
+          allCategoryVariants.add('HANDCRAFT');
+          allCategoryVariants.add('handcraft');
+          allCategoryVariants.add('Handicraft');
+          allCategoryVariants.add('HANDICRAFT');
+          allCategoryVariants.add('handicraft');
+        } else {
+          allCategoryVariants.add(cat);
+          allCategoryVariants.add(cat.toLowerCase());
+          allCategoryVariants.add(cat.toUpperCase());
+          allCategoryVariants.add(cat.charAt(0).toUpperCase() + cat.slice(1).toLowerCase());
+        }
+      }
+      where.category = { __in: Array.from(allCategoryVariants) };
+    }
+  }
+  if (status) {
+    where.status = status;
+  } else if (inStock) {
+    where.status = ProductStatus.ACTIVE;
+  }
+  if (minPrice !== undefined || maxPrice !== undefined) {
+    const priceFilter: Record<string, unknown> = {};
+    if (minPrice !== undefined) priceFilter.__gte = minPrice;
+    if (maxPrice !== undefined) priceFilter.__lte = maxPrice;
+    where.price = priceFilter;
+  }
+  if (isHandmade) {
+    where.tags = { __has: 'handmade' };
+  }
   if (search) {
     where.OR = [
       { name: contains(search) },
@@ -202,16 +253,44 @@ export const list = async (options: {
     ];
   }
 
+  let order: Record<string, 'ASC' | 'DESC'> = { createdAt: 'DESC' };
+  if (sortBy === 'price-low') {
+    order = { price: 'ASC' };
+  } else if (sortBy === 'price-high') {
+    order = { price: 'DESC' };
+  } else if (sortBy === 'rating') {
+    order = { rating: 'DESC' };
+  } else if (sortBy === 'popular') {
+    order = { totalReviews: 'DESC' };
+  } else if (sortBy === 'newest') {
+    order = { createdAt: 'DESC' };
+  }
+
   const [products, total] = await productRepo.findAndCount({
     where,
-    order: { createdAt: 'DESC' },
+    order,
     skip,
     take: limit,
   });
   const shops = await getShopRepository().find({ where: [...new Set(products.map(product => product.shopId))].map(id => ({ id })) });
   const shopsById = new Map(shops.map(shop => [shop.id, shop]));
+  const productIds = products.map(p => p.id);
+  const inventories = productIds.length > 0 
+    ? await getInventoryRepository().find({ where: { productId: { __in: productIds } } })
+    : [];
+  const inventoryByProductId = new Map(inventories.map(inv => [inv.productId, inv]));
+
   return {
-    products: products.map(product => mapProductToInterface(product, shopsById.get(product.shopId))),
+    products: products.map(product => {
+      const mapped = mapProductToInterface(product, shopsById.get(product.shopId));
+      const inv = inventoryByProductId.get(product.id);
+      if (inv) {
+        mapped.stock = inv.available;
+      } else {
+        mapped.stock = product.status === ProductStatus.ACTIVE ? 10 : 0;
+      }
+      return mapped;
+    }),
     total,
   };
 };

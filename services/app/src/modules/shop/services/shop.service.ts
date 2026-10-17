@@ -1,4 +1,4 @@
-import { getShopRepository, Shop, contains } from '../../../database';
+﻿import { getShopRepository, Shop, contains } from '../../../database';
 import { ShopCategory, ShopStatus, VerificationStatus, IShop, getEventBus } from '@crevea/shared';
 import { EventType, IEvent } from '@crevea/shared';
 import { v4 as uuidv4 } from 'uuid';
@@ -107,7 +107,7 @@ export const findBySeller = async (sellerId: string): Promise<IShop[]> => {
 
 export const search = async (
   query: string,
-  options: { page: number; limit: number; category?: ShopCategory; status?: ShopStatus; verificationStatus?: VerificationStatus; search?: string }
+  options: { page: number; limit: number; category?: ShopCategory; status?: ShopStatus; verificationStatus?: VerificationStatus; search?: string; sortBy?: string }
 ): Promise<{ shops: IShop[]; total: number }> => {
   const shopRepo = getShopRepository();
   const { page, limit, category, status } = options;
@@ -132,9 +132,20 @@ export const search = async (
     where.name = contains(query);
   }
 
+  let order: any = { createdAt: 'DESC' };
+  if (options.sortBy) {
+    if (options.sortBy === 'rating') {
+      order = { rating: 'DESC' };
+    } else if (options.sortBy === 'newest') {
+      order = { createdAt: 'DESC' };
+    } else if (options.sortBy === 'popular') {
+      order = { totalSales: 'DESC' };
+    }
+  }
+
   const [shops, total] = await shopRepo.findAndCount({
     where,
-    order: { createdAt: 'DESC' },
+    order,
     take: limit,
     skip,
   });
@@ -250,3 +261,4 @@ const mapShopToInterface = (shop: Shop): IShop => {
     updatedAt: shop.updatedAt,
   };
 };
+

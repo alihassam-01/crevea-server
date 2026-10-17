@@ -51,15 +51,31 @@ export const deleteProduct = async (id: string, userId: string) => {
 };
 
 export const listProducts = async (query: any) => {
-  const { page = 1, limit = 20, category, status, search, minPrice, maxPrice } = query;
+  const {
+    page = 1,
+    limit = 20,
+    category,
+    status,
+    search,
+    minPrice,
+    maxPrice,
+    sortBy,
+    sort,
+    inStock,
+    isHandmade,
+    handmade,
+  } = query;
   const result = await productService.list({
     page: parseInt(String(page)),
     limit: parseInt(String(limit)),
     category,
     status,
     search,
-    minPrice: minPrice ? parseFloat(minPrice) : undefined,
-    maxPrice: maxPrice ? parseFloat(maxPrice) : undefined,
+    minPrice: minPrice !== undefined && minPrice !== '' ? parseFloat(String(minPrice)) : undefined,
+    maxPrice: maxPrice !== undefined && maxPrice !== '' ? parseFloat(String(maxPrice)) : undefined,
+    sortBy: sortBy || sort,
+    inStock: inStock === 'true' || inStock === true,
+    isHandmade: isHandmade === 'true' || isHandmade === true || handmade === 'true' || handmade === true,
   });
   return result;
 };
