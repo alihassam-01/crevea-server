@@ -2,7 +2,7 @@
 # Copied to ~/crevea-server/docker-compose.yml by .github/workflows/deploy.yml, next to the .env it writes.
 # The server also runs the separate "crochet" project (api.bunaicorner.com on 127.0.0.1:3000, Postgres on 5432),
 # so everything here uses its own project name, volumes and ports to stay isolated from it.
-# The API is served directly on port 3001 until a domain is added (then Caddy on the host will proxy to it).
+# Caddy on the host proxies api.crevea.duckdns.org to 127.0.0.1:3001.
 
 name: crevea
 
@@ -58,9 +58,8 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-crevea}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-crevea}
       REDIS_URL: redis://redis:6379
     ports:
-      # Public for now (http://<server ip>:3001, no domain yet; opened in the EC2 security group).
-      # Once a domain is set up behind Caddy, change back to "127.0.0.1:3001:3000".
-      - "3001:3000"
+      # Only reachable from the server itself: Caddy on the host proxies api.crevea.duckdns.org to it
+      - "127.0.0.1:3001:3000"
     depends_on:
       postgres:
         condition: service_healthy
