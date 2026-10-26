@@ -3,6 +3,7 @@ import { IPayment, PaymentMethod, PaymentStatus, getEventBus } from '@crevea/sha
 import { EventType, IEvent, IPaymentCompletedPayload } from '@crevea/shared';
 import { v4 as uuidv4 } from 'uuid';
 import crypto from 'crypto';
+import { frontendUrl } from '../../../frontend';
 
 interface CreatePaymentData {
   orderId: string;
@@ -131,8 +132,8 @@ const processPayFast = async (payment: Payment): Promise<{ success: boolean; tra
     merchant_key: merchantKey,
     amount: payment.amount.toString(),
     item_name: `Order ${payment.orderId}`,
-    return_url: `${process.env.FRONTEND_URL}/payment/success`,
-    cancel_url: `${process.env.FRONTEND_URL}/payment/cancel`,
+    return_url: `${frontendUrl}/payment/success`,
+    cancel_url: `${frontendUrl}/payment/cancel`,
     notify_url: `${process.env.API_URL}/payments/payfast/notify`,
   };
 

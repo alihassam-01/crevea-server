@@ -30,13 +30,14 @@ import { handleAllEvents } from './modules/notification/handlers/event.handler';
 import { handleEmailEvents } from './modules/email/handlers/email.handler';
 import { initDatabase } from './database';
 import { initRedis } from './redis';
+import { frontendOrigins } from './frontend';
 
 const logger = createLogger('crevea-app');
 const port = parseInt(process.env.PORT || '3000', 10);
 
 export async function buildServer() {
   const server = Fastify({ logger: false, trustProxy: true });
-  await server.register(cors, { origin: process.env.FRONTEND_URL || 'http://localhost:9011', credentials: true });
+  await server.register(cors, { origin: frontendOrigins, credentials: true });
   await server.register(helmet, { contentSecurityPolicy: false });
   await server.register(websocket);
 

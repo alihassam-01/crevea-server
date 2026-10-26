@@ -1,5 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import * as oauthController from '../controllers/oauth.controller';
+import { frontendUrl } from '../../../frontend';
 
 /**
  * OAuth routes
@@ -16,7 +17,7 @@ export default async function oauthRoutes(server: FastifyInstance) {
     const result = await oauthController.handleGoogleCallback(code);
     
     // Redirect to frontend with tokens
-    const redirectUrl = `${process.env.FRONTEND_URL}/auth/callback?accessToken=${result.accessToken}&refreshToken=${result.refreshToken}`;
+    const redirectUrl = `${frontendUrl}/auth/callback?accessToken=${result.accessToken}&refreshToken=${result.refreshToken}`;
     return reply.redirect(redirectUrl);
   });
 

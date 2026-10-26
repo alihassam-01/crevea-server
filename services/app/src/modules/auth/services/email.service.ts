@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { addHours } from '@crevea/shared';
 import { randomInt } from 'crypto';
 import { sendEmail as sendTransactionalEmail } from '../../email/services/email.service';
+import { frontendUrl } from '../../../frontend';
 
 const logger = createLogger('email-service');
 
@@ -32,7 +33,7 @@ export const sendVerificationEmail = async (userId: string, email: string): Prom
   await tokenRepo.save(verificationToken);
 
   // Send email
-  const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${token}`;
+  const verificationUrl = `${frontendUrl}/verify-email?token=${token}`;
   await sendEmail(
     email,
     'Verify your email',
