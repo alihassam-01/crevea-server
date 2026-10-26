@@ -68,7 +68,8 @@ jobs:
             exit 1
           fi
           mkdir -p ~/.ssh
-          printf '%s\n' "$EC2_SSH_KEY" > ~/.ssh/deploy_key
+          # Strip Windows line endings: a key pasted from Windows otherwise fails with "error in libcrypto"
+          printf '%s\n' "$EC2_SSH_KEY" | tr -d '\r' > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts 2> /dev/null
           echo "SSH=ssh -i $HOME/.ssh/deploy_key -o BatchMode=yes $EC2_USER@$EC2_HOST" >> "$GITHUB_ENV"
