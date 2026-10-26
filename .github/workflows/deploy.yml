@@ -1,8 +1,8 @@
 # Builds the API image on every push to main, pushes it to GHCR and deploys it to the EC2 server.
-# Needs the "production" environment (Settings -> Environments) with these secrets:
-#   EC2_HOST             public IP or DNS of the server
-#   EC2_USER             SSH user (ubuntu)
-#   EC2_SSH_KEY          full contents of the private key (.pem) used to SSH in
+# Needs the "production" environment (Settings -> Environments) with:
+#   EC2_HOST             variable (or secret): public IP or DNS of the server
+#   EC2_USER             variable (or secret): SSH user (ubuntu)
+#   EC2_SSH_KEY          secret (preferred) or variable: full contents of the private key (.pem) used to SSH in
 #   PRODUCTION_ENV_FILE  optional: full contents of the production .env (see .env.example);
 #                        when unset, the .env maintained by hand on the server is used
 name: Deploy
@@ -54,15 +54,19 @@ jobs:
       contents: read
       packages: read
     env:
-      EC2_HOST: ${{ secrets.EC2_HOST }}
-      EC2_USER: ${{ secrets.EC2_USER }}
+      EC2_HOST: ${{ vars.EC2_HOST || secrets.EC2_HOST }}
+      EC2_USER: ${{ vars.EC2_USER || secrets.EC2_USER }}
     steps:
       - uses: actions/checkout@v4
 
       - name: Set up SSH
         env:
-          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY || vars.EC2_SSH_KEY }}
         run: |
+          if [ -z "$EC2_HOST" ] || [ -z "$EC2_USER" ] || [ -z "$EC2_SSH_KEY" ]; then
+            echo "::error::Set EC2_HOST, EC2_USER and EC2_SSH_KEY in the production environment"
+            exit 1
+          fi
           mkdir -p ~/.ssh
           printf '%s\n' "$EC2_SSH_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
