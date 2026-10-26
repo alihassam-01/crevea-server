@@ -1,0 +1,93 @@
+# Builds the API image on every push to main, pushes it to GHCR and deploys it to the EC2 server.
+# Needs the "production" environment (Settings -> Environments) with these secrets:
+#   EC2_HOST             public IP or DNS of the server
+#   EC2_USER             SSH user (ubuntu)
+#   EC2_SSH_KEY          full contents of the private key (.pem) used to SSH in
+#   PRODUCTION_ENV_FILE  optional: full contents of the production .env (see .env.example);
+#                        when unset, the .env maintained by hand on the server is used
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image: ${{ steps.meta.outputs.image }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: meta
+        run: echo "image=ghcr.io/${GITHUB_REPOSITORY,,}:${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.image }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+      packages: read
+    env:
+      EC2_HOST: ${{ secrets.EC2_HOST }}
+      EC2_USER: ${{ secrets.EC2_USER }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up SSH
+        env:
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$EC2_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts 2> /dev/null
+          echo "SSH=ssh -i $HOME/.ssh/deploy_key -o BatchMode=yes $EC2_USER@$EC2_HOST" >> "$GITHUB_ENV"
+
+      - name: Upload compose file, deploy script and .env
+        env:
+          PRODUCTION_ENV_FILE: ${{ secrets.PRODUCTION_ENV_FILE }}
+        run: |
+          $SSH 'mkdir -p ~/crevea-server'
+          $SSH 'cat > ~/crevea-server/docker-compose.yml' < deploy/docker-compose.prod.yml
+          $SSH 'cat > ~/crevea-server/remote-deploy.sh && chmod +x ~/crevea-server/remote-deploy.sh' < deploy/remote-deploy.sh
+          # Optional: without this secret the .env already on the server (~/crevea-server/.env) is kept as is
+          if [ -n "$PRODUCTION_ENV_FILE" ]; then
+            printf '%s\n' "$PRODUCTION_ENV_FILE" | $SSH 'umask 077 && cat > ~/crevea-server/.env'
+          fi
+
+      - name: Deploy
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          printf '%s\n' "$GHCR_TOKEN" | $SSH \
+            "read -r GHCR_TOKEN && GHCR_USER='${{ github.actor }}' GHCR_TOKEN=\"\$GHCR_TOKEN\" ~/crevea-server/remote-deploy.sh '${{ needs.build.outputs.image }}'"
+
+      - name: Clean up
+        if: always()
+        run: rm -f ~/.ssh/deploy_key

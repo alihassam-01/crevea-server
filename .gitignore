@@ -44,9 +44,6 @@ tmp/
 temp/
 *.tmp
 
-# Docker
-.dockerignore
-
 #turbo
 ./turbo
 .turbo

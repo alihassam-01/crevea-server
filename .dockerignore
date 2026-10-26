@@ -1,0 +1,14 @@
+**/node_modules
+**/dist
+**/*.tsbuildinfo
+services/app/src/generated
+.git
+.github
+.turbo
+.env
+.env.*
+!.env.example
+*.md
+postman_collection.json
+docs
+certs

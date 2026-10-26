@@ -1,0 +1,73 @@
+# Production stack for Crevea on the shared EC2 server: Postgres + Redis + API.
+# Copied to ~/crevea-server/docker-compose.yml by .github/workflows/deploy.yml, next to the .env it writes.
+# The server also runs the separate "crochet" project (api.bunaicorner.com on 127.0.0.1:3000, Postgres on 5432),
+# so everything here uses its own project name, volumes and ports to stay isolated from it.
+# The API is served directly on port 3001 until a domain is added (then Caddy on the host will proxy to it).
+
+name: crevea
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-crevea}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-crevea}
+    volumes:
+      - pgdata:/var/lib/postgresql
+    ports:
+      # Server-only; reach it from your machine with an SSH tunnel (ssh -L 5433:localhost:5433 ...)
+      - "127.0.0.1:5433:5432"
+    shm_size: 128mb
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    logging: *logging
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory", "128mb", "--maxmemory-policy", "noeviction"]
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    logging: *logging
+
+  app:
+    image: ${APP_IMAGE:-crevea-server:current}
+    pull_policy: never
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      # Always point at the containers in this project, whatever the .env says
+      DATABASE_URL: postgresql://${POSTGRES_USER:-crevea}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-crevea}
+      REDIS_URL: redis://redis:6379
+    ports:
+      # Public for now (http://<server ip>:3001, no domain yet; opened in the EC2 security group).
+      # Once a domain is set up behind Caddy, change back to "127.0.0.1:3001:3000".
+      - "3001:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    logging: *logging
+
+volumes:
+  pgdata:
+  redisdata:
