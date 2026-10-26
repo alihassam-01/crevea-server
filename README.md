@@ -197,3 +197,4 @@ Redis is currently still used for sessions, carts, and the in-process event hand
 ## 📄 License
 
 MIT
+<!-- test connection -->
