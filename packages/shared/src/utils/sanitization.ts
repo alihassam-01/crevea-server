@@ -40,11 +40,13 @@ export const sanitizeUrl = (url: string): string | null => {
 };
 
 /**
- * Sanitize email
+ * Sanitize email: trim and lowercase only.
+ * validator.normalizeEmail is deliberately not used: it drops Gmail dots and +tags and Yahoo "-suffixes",
+ * which changes the address the user typed and can point at a different mailbox.
  */
 export const sanitizeEmail = (email: string): string => {
-  if (!email) return '';
-  return validator.normalizeEmail(email) || '';
+  const normalized = (email || '').trim().toLowerCase();
+  return normalized.includes('@') ? normalized : '';
 };
 
 /**
