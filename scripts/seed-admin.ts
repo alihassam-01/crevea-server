@@ -1,9 +1,10 @@
 import 'dotenv/config';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../services/app/src/generated/prisma/client';
-import { hashPassword } from '@crevea/shared';
+import { hashPassword, sanitizeEmail } from '@crevea/shared';
 
-const email = process.env.ADMIN_EMAIL?.trim().toLowerCase();
+// Same normalization the app applies on register/login (e.g. Gmail dots are dropped), or the account could never log in
+const email = sanitizeEmail(process.env.ADMIN_EMAIL?.trim() ?? '');
 const password = process.env.ADMIN_PASSWORD;
 
 if (!email || !password) {
