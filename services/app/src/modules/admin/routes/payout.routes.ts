@@ -16,7 +16,24 @@ const updateCommissionSchema = z.object({
   commissionRate: z.number().min(0).max(100),
 });
 
+const payoutQuery = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+  status: z.string().trim().min(1).optional(),
+});
+
 export default async function payoutRoutes(server: FastifyInstance) {
+  server.get('/payouts', {
+    preHandler: [authenticate, requirePermission(Permission.ADMIN_DASHBOARD)]
+  }, async (request, reply) => {
+    const query = validate(payoutQuery, request.query);
+    return reply.send(await payoutController.getPayouts({
+      page: query.page ?? 1,
+      limit: query.limit ?? 20,
+      status: query.status,
+    }));
+  });
+
   // Get pending payouts
   server.get('/payouts/pending', {
     preHandler: [authenticate, requirePermission(Permission.ADMIN_DASHBOARD)]
